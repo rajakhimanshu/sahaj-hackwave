@@ -71,7 +71,7 @@ export default function LandingPage() {
           <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:grid-cols-3 sm:px-10 lg:px-14">
             {[
               ["Voice + languages", "Listen to briefs in English, Hindi, Marathi and more."],
-              ["Category desks", "Bills, IDs, and legal notices each get their own guidance shape."],
+              ["WhatsApp share · bill compare", "Family share card plus month-vs-month utility check."],
               ["Local vault · free core", "On-device storage. Transparent ads fund the free tier."],
             ].map(([title, copy]) => (
               <article key={title} className="border-l-2 border-[var(--glow)] pl-4">
