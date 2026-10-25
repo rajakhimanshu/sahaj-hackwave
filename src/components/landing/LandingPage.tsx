@@ -203,6 +203,44 @@ export default function LandingPage() {
               </article>
             ))}
           </section>
+
+          <section className="grid border-t border-[var(--night)] lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="bg-[var(--glow)] p-8 sm:p-12">
+              <div className="stamp inline-block px-4 py-2 text-xs font-bold text-[var(--night)]">
+                NEW · CIVIC GUIDE
+              </div>
+              <h2 className="mt-8 font-display text-4xl leading-tight text-[var(--night)]">
+                Legal-looking does not have to mean impossible.
+              </h2>
+            </div>
+            <div className="bg-[var(--panel)] p-8 sm:p-12">
+              <p className="max-w-2xl text-base leading-8 text-[var(--ink-soft)]">
+                Sahaj separates what a notice explicitly requires from general
+                guidance. It surfaces obligations, stated options, urgency,
+                escalation steps, and the right official or professional help
+                to seek.
+              </p>
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {[
+                  ["01", "What it asks"],
+                  ["02", "Your stated options"],
+                  ["03", "Where to escalate"],
+                ].map(([number, label]) => (
+                  <div key={number} className="border-t border-[var(--night)] pt-3">
+                    <span className="text-xs text-[var(--accent)]">{number}</span>
+                    <p className="mt-2 text-sm font-semibold text-[var(--night)]">
+                      {label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-8 text-xs leading-5 text-[var(--slate)]">
+                Sahaj provides document education, not legal advice. High-risk
+                matters are escalated to an official authority or qualified
+                professional.
+              </p>
+            </div>
+          </section>
         </section>
 
         <section className="bg-[var(--accent)] text-white">
@@ -251,9 +289,13 @@ function DocumentDesk() {
       <div className="absolute left-8 top-8 font-display text-8xl text-[var(--night)]/[0.05]">
         परिवार
       </div>
-      <div className="folder-shadow relative w-full max-w-md border border-[var(--night)] bg-[#d8a94b] p-3 pt-12">
+      <div className="hero-folder folder-shadow relative w-full max-w-md border border-[var(--night)] bg-[#d8a94b] p-3 pt-12">
         <div className="absolute -top-8 left-0 h-9 w-44 border border-b-0 border-[var(--night)] bg-[#d8a94b]" />
-        <div className="ruled-paper min-h-[28rem] border border-[var(--night)] px-8 py-10 sm:px-12">
+        <div className="hero-sheet ruled-paper relative min-h-[28rem] overflow-hidden border border-[var(--night)] px-8 py-10 sm:px-12">
+          <div
+            aria-hidden
+            className="document-scan pointer-events-none absolute inset-x-0 top-0 h-px bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]"
+          />
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold text-[var(--accent)]">
@@ -265,7 +307,7 @@ function DocumentDesk() {
                 notice
               </h2>
             </div>
-            <span className="stamp px-3 py-2 text-[10px] font-bold text-[var(--ok)]">
+            <span className="hero-stamp stamp px-3 py-2 text-[10px] font-bold text-[var(--ok)]">
               VERIFIED
             </span>
           </div>
@@ -289,7 +331,7 @@ function DocumentDesk() {
           </p>
         </div>
       </div>
-      <div className="absolute bottom-7 right-7 rotate-3 border border-[var(--night)] bg-[var(--accent)] px-4 py-3 text-xs font-bold text-white">
+      <div className="hero-tag absolute bottom-7 right-7 rotate-3 border border-[var(--night)] bg-[var(--accent)] px-4 py-3 text-xs font-bold text-white">
         EN + हिंदी
       </div>
     </div>

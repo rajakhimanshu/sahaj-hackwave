@@ -39,6 +39,15 @@ export type DocumentAnalysis = {
   glossary: { term: string; meaning: string }[];
   confidence: number;
   whatHappensIfIgnored: string;
+  legalGuidance?: {
+    isLegalOrOfficial: boolean;
+    documentNature: string;
+    obligations: string[];
+    rightsOrOptions: string[];
+    escalationSteps: string[];
+    officialHelp: string[];
+    urgencyReason: string;
+  };
 };
 
 export type AskResponse = {
@@ -46,6 +55,7 @@ export type AskResponse = {
   answerHindi: string;
   citations: string[];
   followUps: string[];
+  mode?: "gemini" | "grounded-fallback";
 };
 
 export type VaultItem = {

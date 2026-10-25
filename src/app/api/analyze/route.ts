@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
     const unavailable =
       message.includes("503") ||
       message.includes("429") ||
-      message.toLowerCase().includes("high demand");
+      message.toLowerCase().includes("high demand") ||
+      message.toLowerCase().includes("aborted") ||
+      message.toLowerCase().includes("timed out");
     return NextResponse.json(
       {
         error: unavailable

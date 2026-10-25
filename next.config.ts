@@ -1,7 +1,21 @@
 import type { NextConfig } from "next";
 
+const awsApiOrigin = process.env.AWS_API_ORIGIN?.replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  async rewrites() {
+    if (!awsApiOrigin) return [];
+
+    return {
+      beforeFiles: [
+        {
+          source: "/api/:path*",
+          destination: `${awsApiOrigin}/api/:path*`,
+        },
+      ],
+    };
+  },
   async headers() {
     return [
       {

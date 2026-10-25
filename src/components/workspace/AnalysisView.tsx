@@ -269,6 +269,54 @@ export default function AnalysisView({
         </div>
       )}
 
+      {analysis.legalGuidance && (
+        <section className="border border-[var(--night)] bg-[var(--night)] text-white">
+          <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
+            <div className="border-b border-white/15 p-6 sm:p-8 lg:border-b-0 lg:border-r">
+              <p className="text-xs font-semibold text-[var(--glow)]">
+                RIGHTS &amp; ESCALATION GUIDE
+              </p>
+              <h3 className="mt-4 font-display text-3xl">
+                Know what this document asks of you.
+              </h3>
+              <p className="mt-4 text-sm leading-6 text-white/65">
+                {analysis.legalGuidance.documentNature}
+              </p>
+              <div className="mt-6 border-l-2 border-[var(--glow)] pl-4 text-xs leading-5 text-white/60">
+                Sahaj explains documents; it does not provide legal advice.
+                For legal consequences or disputes, consult the issuing
+                authority or a qualified professional.
+              </div>
+            </div>
+
+            <div className="grid gap-px bg-white/15 sm:grid-cols-2">
+              <LegalList
+                title="Your obligations"
+                items={analysis.legalGuidance.obligations}
+              />
+              <LegalList
+                title="Your options"
+                items={analysis.legalGuidance.rightsOrOptions}
+              />
+              <LegalList
+                title="Escalation path"
+                items={analysis.legalGuidance.escalationSteps}
+              />
+              <LegalList
+                title="Official help"
+                items={analysis.legalGuidance.officialHelp}
+              />
+            </div>
+          </div>
+          {analysis.legalGuidance.urgencyReason && (
+            <p className="border-t border-white/15 bg-[var(--accent)] px-6 py-3 text-sm text-white sm:px-8">
+              <span className="font-semibold">Why it may be urgent: </span>
+              {analysis.legalGuidance.urgencyReason}
+            </p>
+          )}
+        </section>
+      )}
+
       <section className="no-print border border-[var(--night)] bg-[var(--panel)] p-6">
         <h3 className="font-display text-xl text-[var(--night)]">Ask Sahaj</h3>
         <p className="mt-1 text-sm text-[var(--slate)]">Grounded answers only from this analysis.</p>
@@ -292,6 +340,11 @@ export default function AnalysisView({
         {askError && <p className="mt-3 text-sm text-[var(--danger)]">{askError}</p>}
         {askResult && (
           <div className="mt-4 rounded-xl bg-[var(--mist)] p-4">
+            {askResult.mode === "grounded-fallback" && (
+              <p className="mb-3 text-[11px] font-semibold text-[var(--warn)]">
+                GEMINI BUSY · ANSWERED FROM EXTRACTED BRIEF
+              </p>
+            )}
             <p className="leading-relaxed">{askResult.answer}</p>
             <p className="mt-2 leading-relaxed text-[var(--ink-soft)]">{askResult.answerHindi}</p>
             {askResult.followUps?.length > 0 && (
@@ -311,6 +364,25 @@ export default function AnalysisView({
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function LegalList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="bg-[var(--night)] p-6">
+      <h4 className="text-sm font-semibold text-[var(--glow)]">{title}</h4>
+      {items?.length ? (
+        <ul className="mt-3 list-disc space-y-2 pl-4 text-xs leading-5 text-white/75">
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-xs text-white/45">
+          Not stated in this document.
+        </p>
+      )}
     </div>
   );
 }

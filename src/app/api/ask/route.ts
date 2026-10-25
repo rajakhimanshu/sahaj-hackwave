@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { askAboutDocument } from "@/lib/gemini";
+import { buildGroundedFallback } from "@/lib/grounded-fallback";
 import type { DocumentAnalysis } from "@/lib/types";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  let groundedAnalysis: DocumentAnalysis | undefined;
+  let groundedQuestion = "";
+
   try {
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -16,6 +20,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const question = typeof body.question === "string" ? body.question.trim() : "";
     const analysis = body.analysis as DocumentAnalysis | undefined;
+    groundedAnalysis = analysis;
+    groundedQuestion = question;
 
     if (!question) {
       return NextResponse.json({ error: "Question required" }, { status: 400 });
@@ -44,7 +50,14 @@ export async function POST(req: NextRequest) {
     const unavailable =
       message.includes("503") ||
       message.includes("429") ||
-      message.toLowerCase().includes("high demand");
+      message.toLowerCase().includes("high demand") ||
+      message.toLowerCase().includes("aborted") ||
+      message.toLowerCase().includes("timed out");
+    if (unavailable && groundedAnalysis && groundedQuestion) {
+      return NextResponse.json({
+        answer: buildGroundedFallback(groundedAnalysis, groundedQuestion),
+      });
+    }
     return NextResponse.json(
       {
         error: unavailable

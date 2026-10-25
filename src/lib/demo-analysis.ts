@@ -67,4 +67,27 @@ export const DEMO_ANALYSIS: DocumentAnalysis = {
   confidence: 0.94,
   whatHappensIfIgnored:
     "A late fee may be added. If the bill remains unpaid, the electricity connection can eventually be disconnected.",
+  legalGuidance: {
+    isLegalOrOfficial: true,
+    documentNature:
+      "An official utility payment demand, not a court order or legal notice.",
+    obligations: [
+      "Pay the stated bill by 28 March if the account and usage are correct.",
+    ],
+    rightsOrOptions: [
+      "Verify the meter and consumer number before payment.",
+      "Raise a billing complaint through BESCOM’s official grievance channel if the amount appears incorrect.",
+    ],
+    escalationSteps: [
+      "Compare the consumer number and usage with the previous bill.",
+      "Contact BESCOM through its official website or service centre.",
+      "Keep the complaint reference and payment records.",
+    ],
+    officialHelp: [
+      "BESCOM official customer service or grievance officer",
+      "Consumer helpline if an official complaint is not resolved",
+    ],
+    urgencyReason:
+      "The document states a 28 March payment deadline and warns of a late surcharge.",
+  },
 };

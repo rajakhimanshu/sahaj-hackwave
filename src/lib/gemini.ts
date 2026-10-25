@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AskResponse, DocumentAnalysis } from "./types";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
-const FALLBACK_MODEL = "gemini-3.8-flash";
+const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-3.8-flash"];
 
 function getClient() {
   const key = process.env.GEMINI_API_KEY;
@@ -28,10 +28,11 @@ function extractJson<T>(text: string): T {
 
 async function generateWithFallback(
   content: Parameters<ReturnType<GoogleGenerativeAI["getGenerativeModel"]>["generateContent"]>[0],
-  temperature: number
+  temperature: number,
+  timeouts = { primary: 25_000, fallback: 10_000 }
 ) {
   const genAI = getClient();
-  const models = [...new Set([MODEL, FALLBACK_MODEL])];
+  const models = [...new Set([MODEL, ...FALLBACK_MODELS])];
   let lastError: unknown;
 
   for (const modelName of models) {
@@ -44,7 +45,7 @@ async function generateWithFallback(
             responseMimeType: "application/json",
           },
         },
-        { timeout: 15_000 }
+        { timeout: modelName === MODEL ? timeouts.primary : timeouts.fallback }
       );
       const result = await model.generateContent(content);
       return result.response.text();
@@ -55,7 +56,8 @@ async function generateWithFallback(
         message.includes("503") ||
         message.includes("429") ||
         message.toLowerCase().includes("high demand") ||
-        message.toLowerCase().includes("timed out");
+        message.toLowerCase().includes("timed out") ||
+        message.toLowerCase().includes("aborted");
       if (!retryable) break;
     }
   }
@@ -91,10 +93,24 @@ Return ONLY valid JSON with this exact shape:
   "keyQuotes": ["short exact phrases copied from the document if readable"],
   "glossary": [{"term":"jargon from doc","meaning":"plain meaning"}],
   "confidence": 0.0,
-  "whatHappensIfIgnored": "practical consequence if they do nothing"
+  "whatHappensIfIgnored": "practical consequence if they do nothing",
+  "legalGuidance": {
+    "isLegalOrOfficial": false,
+    "documentNature": "plain description of whether this is a contract, demand, notice, policy, form, court/government communication, or ordinary document",
+    "obligations": ["actions the document explicitly requires; empty if none"],
+    "rightsOrOptions": ["options explicitly stated in the document; do not invent legal rights"],
+    "escalationSteps": ["safe practical escalation, e.g. verify issuer, contact official grievance channel, consult a qualified professional"],
+    "officialHelp": ["official authority or professional category to contact; never fabricate phone numbers or URLs"],
+    "urgencyReason": "why this is or is not time-sensitive"
+  }
 }
 
 scamScore: 0-100. Higher if pressure tactics, unusual payment asks, spoofed logos, typos, urgency without official channel.
+For legalGuidance:
+- This is document education, not legal advice.
+- Distinguish text visible in the document from general practical guidance.
+- Never claim a legal right, deadline, penalty, or remedy unless visible in the document.
+- Recommend a qualified lawyer or official authority for court notices, eviction, arrest, large financial exposure, or unclear legal consequences.
 If image is not a document, still return JSON with low confidence and explain in summaries.`;
 
 export async function analyzeDocument(
@@ -104,7 +120,7 @@ export async function analyzeDocument(
   const text = await generateWithFallback([
     { text: ANALYZE_PROMPT },
     { inlineData: { data: base64, mimeType } },
-  ], 0.15);
+  ], 0.15, { primary: 30_000, fallback: 12_000 });
 
   return extractJson<DocumentAnalysis>(text);
 }
@@ -131,5 +147,8 @@ Return ONLY JSON:
 }`;
 
   const text = await generateWithFallback(prompt, 0.25);
-  return extractJson<AskResponse>(text);
+  return {
+    ...extractJson<AskResponse>(text),
+    mode: "gemini",
+  };
 }
