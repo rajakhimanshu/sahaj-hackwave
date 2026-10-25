@@ -13,6 +13,7 @@ const features = [
   ["Document understanding", "Gemini reads bills, notices, IDs, and legal papers differently — not one generic template."],
   ["Multilingual summary", "English, Hindi, Marathi, Tamil, Bengali, Gujarati, Elder, ELI5."],
   ["Voice read-aloud", "Listen to the summary in the selected language — built for elders."],
+  ["Family WhatsApp share", "Message, copy, or PNG share card — ID docs share checklist only."],
   ["Document chatbot", "Ask grounded questions; refuse invented facts."],
   ["Legal / civic guide", "Obligations, options, escalation — clearly not legal advice."],
   ["Local vault + account", "Browser-local storage. No cloud dossier for the hackathon build."],

@@ -6,7 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Sahaj feature map — voice read-aloud, multilingual briefs, category desks, chatbot, vault, PDF, and revenue model.",
+    "Sahaj feature map — voice read-aloud, WhatsApp share card, multilingual briefs, category desks, chatbot, vault, PDF, and revenue model.",
 };
 
 const rows = [
@@ -52,6 +52,14 @@ const rows = [
   },
   {
     tag: "LIVE",
+    title: "Family WhatsApp share card",
+    detail:
+      "One-tap WhatsApp message, copy text, or download a PNG share image. ID docs share checklist only — not the photo.",
+    href: "/app?demo=1",
+    cta: "Try share",
+  },
+  {
+    tag: "LIVE",
     title: "PDF + TXT export",
     detail: "Download a family-ready brief for sharing offline.",
     href: "/app?demo=1",
@@ -67,9 +75,9 @@ const rows = [
   },
   {
     tag: "NEXT",
-    title: "Family share card & bill compare",
+    title: "Bill compare",
     detail:
-      "Coming next in this build cycle — WhatsApp-ready share image and month-vs-month bill compare.",
+      "Next in this build cycle — month-vs-month utility bill compare on the same desk.",
     href: "/about",
     cta: "About roadmap",
   },

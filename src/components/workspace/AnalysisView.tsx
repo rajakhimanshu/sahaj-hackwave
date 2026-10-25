@@ -9,9 +9,11 @@ import {
 } from "@/lib/export-report";
 import { categoryLabel } from "@/lib/category-focus";
 import AdSlot from "@/components/AdSlot";
+import { openWhatsAppShare } from "@/lib/share-card";
 import CategoryDesk from "./CategoryDesk";
 import DocumentChat from "./DocumentChat";
 import ReadAloud from "./ReadAloud";
+import ShareFamilyCard from "./ShareFamilyCard";
 
 const MODES: { id: ReadingMode; label: string }[] = [
   { id: "simple", label: "English" },
@@ -97,6 +99,15 @@ export default function AnalysisView({
               Save to vault
             </button>
           )}
+          {everyday && (
+            <button
+              type="button"
+              onClick={() => openWhatsAppShare(analysis)}
+              className="focus-ring rounded-xl border border-[#128C7E] bg-[#128C7E] px-3 py-2 text-sm font-medium text-white hover:brightness-110"
+            >
+              WhatsApp
+            </button>
+          )}
           <button
             type="button"
             onClick={() => downloadReportPdf(analysis, fileName)}
@@ -122,6 +133,8 @@ export default function AnalysisView({
       </div>
 
       <CategoryDesk analysis={analysis} />
+
+      {everyday && <ShareFamilyCard analysis={analysis} />}
 
       {everyday ? (
         <div className="grid gap-4 sm:grid-cols-3">
