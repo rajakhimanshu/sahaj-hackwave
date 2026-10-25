@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f3f0e8;
+  --panel: #faf8f3;
+  --wash: #e8ebe4;
+  --ink: #14201a;
+  --ink-soft: #2c3d34;
+  --muted: #5c6b62;
+  --line: #d5d9d1;
+  --accent: #0f6b5c;
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+body {
+  background:
+    radial-gradient(1200px 500px at 10% -10%, #d7ebe4 0%, transparent 55%),
+    radial-gradient(900px 400px at 100% 0%, #e8dfd0 0%, transparent 50%),
+    var(--paper);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
