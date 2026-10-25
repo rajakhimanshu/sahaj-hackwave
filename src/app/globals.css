@@ -98,6 +98,11 @@ body {
   outline-offset: 3px;
 }
 
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 3px solid var(--glow);
+  outline-offset: 3px;
+}
+
 @keyframes folder-arrive {
   from {
     opacity: 0;

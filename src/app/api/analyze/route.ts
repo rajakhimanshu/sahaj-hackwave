@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeDocument } from "@/lib/gemini";
 
-export const maxDuration = 60;
+export const maxDuration = 90;
 
 const ALLOWED = new Set([
   "image/jpeg",

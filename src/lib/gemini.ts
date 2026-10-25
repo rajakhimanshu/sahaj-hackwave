@@ -1,8 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AskResponse, DocumentAnalysis } from "./types";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
-const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-3.8-flash"];
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+const FALLBACK_MODELS = [
+  "gemini-3.6-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+];
 
 function getClient() {
   const key = process.env.GEMINI_API_KEY;
@@ -55,6 +59,7 @@ async function generateWithFallback(
       const retryable =
         message.includes("503") ||
         message.includes("429") ||
+        message.includes("404") ||
         message.toLowerCase().includes("high demand") ||
         message.toLowerCase().includes("timed out") ||
         message.toLowerCase().includes("aborted");
@@ -120,7 +125,7 @@ export async function analyzeDocument(
   const text = await generateWithFallback([
     { text: ANALYZE_PROMPT },
     { inlineData: { data: base64, mimeType } },
-  ], 0.15, { primary: 30_000, fallback: 12_000 });
+  ], 0.15, { primary: 55_000, fallback: 25_000 });
 
   return extractJson<DocumentAnalysis>(text);
 }

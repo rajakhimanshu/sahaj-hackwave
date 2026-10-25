@@ -107,6 +107,9 @@ export default function VaultPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!window.confirm("Delete this brief from this device? This cannot be undone.")) {
+                        return;
+                      }
                       deleteVaultItem(open.id);
                       setOpenId(null);
                       refresh();

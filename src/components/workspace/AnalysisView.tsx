@@ -133,6 +133,7 @@ export default function AnalysisView({
             <button
               key={id}
               type="button"
+              aria-pressed={mode === id}
               onClick={() => setMode(id)}
               className={`rounded-full px-3 py-1.5 text-sm ${
                 mode === id
@@ -161,6 +162,7 @@ export default function AnalysisView({
               <li key={i} className="flex gap-3">
                 <input
                   type="checkbox"
+                  aria-label={`Mark action complete: ${item.step}`}
                   checked={!!checked[i]}
                   onChange={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
                   className="mt-1 h-4 w-4 accent-[var(--accent)]"
