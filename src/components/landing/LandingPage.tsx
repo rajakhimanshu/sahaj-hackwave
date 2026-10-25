@@ -68,17 +68,41 @@ export default function LandingPage() {
         </section>
 
         <section className="border-b border-[var(--night)] bg-[var(--night)] text-white">
-          <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:grid-cols-3 sm:px-10 lg:px-14">
-            {[
-              ["Voice + languages", "Listen to briefs in English, Hindi, Marathi and more."],
-              ["WhatsApp share · bill compare", "Family share card plus month-vs-month utility check."],
-              ["Local vault · free core", "On-device storage. Transparent ads fund the free tier."],
-            ].map(([title, copy]) => (
-              <article key={title} className="border-l-2 border-[var(--glow)] pl-4">
-                <h3 className="text-sm font-semibold text-[var(--glow)]">{title}</h3>
-                <p className="mt-2 text-xs leading-5 text-white/65">{copy}</p>
-              </article>
-            ))}
+          <div className="mx-auto max-w-7xl px-5 py-8 sm:px-10 lg:px-14">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-[var(--glow)]">
+                  EVERYTHING IN THE DEMO
+                </p>
+                <p className="mt-2 max-w-xl text-sm text-white/65">
+                  Judges can see each capability on the landing — then touch it live
+                  in the workspace.
+                </p>
+              </div>
+              <Link
+                href="/features"
+                className="border-b border-[var(--glow)] pb-1 text-xs font-semibold text-[var(--glow)]"
+              >
+                Full feature map →
+              </Link>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["Voice + languages", "Listen in English, Hindi, Marathi, Tamil, Bengali, Gujarati, Elder."],
+                ["WhatsApp share card", "Message, copy, or PNG image — ID docs share checklist only."],
+                ["Bill compare", "Month-vs-month utility check against vault / demo baseline."],
+                ["Category desks", "Bill ≠ school ≠ ID ≠ legal — each shape is different."],
+                ["Document chatbot", "Grounded Ask Sahaj — no invented amounts."],
+                ["Legal / civic guide", "Obligations, options, escalation — not legal advice."],
+                ["Local vault + account", "On-device briefs + optional local PIN profile."],
+                ["PDF · ads · free core", "Export briefs. Transparent ads fund free use."],
+              ].map(([title, copy]) => (
+                <article key={title} className="border-l-2 border-[var(--glow)] pl-4">
+                  <h3 className="text-sm font-semibold text-[var(--glow)]">{title}</h3>
+                  <p className="mt-2 text-xs leading-5 text-white/65">{copy}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
