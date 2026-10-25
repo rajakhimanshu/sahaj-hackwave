@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { categoryLabel } from "@/lib/category-focus";
 import type { VaultItem } from "@/lib/types";
 import { deleteVaultItem, listVault } from "@/lib/vault";
-import { downloadReport } from "@/lib/export-report";
+import { downloadReport, downloadReportPdf } from "@/lib/export-report";
 
 export default function VaultPage() {
   const [items, setItems] = useState<VaultItem[]>([]);
@@ -102,10 +102,17 @@ export default function VaultPage() {
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button
                     type="button"
+                    onClick={() => downloadReportPdf(open.analysis, open.fileName)}
+                    className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white"
+                  >
+                    Download PDF
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => downloadReport(open.analysis, open.fileName)}
                     className="rounded-xl bg-[var(--night)] px-4 py-2 text-sm font-medium text-white"
                   >
-                    Download brief
+                    Download TXT
                   </button>
                   <button
                     type="button"

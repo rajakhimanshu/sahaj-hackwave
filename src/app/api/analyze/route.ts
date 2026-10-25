@@ -36,7 +36,10 @@ export async function POST(req: NextRequest) {
 
     if (file.size > 8 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "File too large (max 8MB)" },
+        {
+          error:
+            "File too large (max 8MB). Compress the photo or PDF, then try again.",
+        },
         { status: 400 }
       );
     }

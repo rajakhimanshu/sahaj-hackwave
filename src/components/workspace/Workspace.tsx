@@ -2,10 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeAnalysis } from "@/lib/category-focus";
+import {
+  ALLOWED_UPLOAD_LABEL,
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_LABEL,
+} from "@/lib/export-report";
 import type { DocumentAnalysis } from "@/lib/types";
+import { getActiveProfile, profileStatsCopy } from "@/lib/local-profile";
 import { saveToVault, vaultStats } from "@/lib/vault";
 import { DEMO_ANALYSIS } from "@/lib/demo-analysis";
 import AnalysisView from "./AnalysisView";
+import Link from "next/link";
 
 type Phase = "idle" | "analyzing" | "ready" | "error";
 
@@ -29,10 +36,12 @@ export default function Workspace() {
   const [toast, setToast] = useState<string | null>(null);
   const [stats, setStats] = useState({ total: 0, needsAttention: 0 });
   const [dragOver, setDragOver] = useState(false);
+  const [profileLine, setProfileLine] = useState("Guest mode · vault stays on this browser");
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       setStats(vaultStats());
+      setProfileLine(profileStatsCopy(getActiveProfile()));
       if (new URLSearchParams(window.location.search).get("demo") === "1") {
         setFileName("BESCOM-March-demo.pdf");
         setAnalysis(DEMO_ANALYSIS);
@@ -59,9 +68,11 @@ export default function Workspace() {
       setError("This file type is not supported. Choose a JPG, PNG, WEBP, GIF, or PDF.");
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       setPhase("error");
-      setError("This file is larger than 8MB. Compress it, then try again.");
+      setError(
+        `This file is larger than ${MAX_UPLOAD_LABEL}. Compress it or crop the photo, then try again.`
+      );
       return;
     }
 
@@ -130,15 +141,25 @@ export default function Workspace() {
             scam check, and action plan — random photos are flagged, not treated as bills.
           </p>
         </div>
-        <div className="flex gap-3 text-sm">
-          <div className="border border-[var(--night)] bg-[var(--panel)] px-4 py-2">
-            <span className="text-[var(--slate)]">Vault </span>
-            <span className="font-semibold">{stats.total}</span>
+        <div className="flex flex-col items-stretch gap-3 text-sm sm:items-end">
+          <div className="flex gap-3">
+            <div className="border border-[var(--night)] bg-[var(--panel)] px-4 py-2">
+              <span className="text-[var(--slate)]">Vault </span>
+              <span className="font-semibold">{stats.total}</span>
+            </div>
+            <div className="border border-[var(--night)] bg-[var(--panel)] px-4 py-2">
+              <span className="text-[var(--slate)]">Attention </span>
+              <span className="font-semibold text-[var(--warn)]">
+                {stats.needsAttention}
+              </span>
+            </div>
           </div>
-          <div className="border border-[var(--night)] bg-[var(--panel)] px-4 py-2">
-            <span className="text-[var(--slate)]">Attention </span>
-            <span className="font-semibold text-[var(--warn)]">{stats.needsAttention}</span>
-          </div>
+          <Link
+            href="/app/account"
+            className="focus-ring border border-[var(--night)] bg-[var(--glow)] px-3 py-2 text-xs font-semibold text-[var(--night)]"
+          >
+            {profileLine} ↗
+          </Link>
         </div>
       </div>
 
@@ -163,7 +184,12 @@ export default function Workspace() {
             +
           </div>
           <h2 className="font-display text-3xl text-[var(--night)]">Place your document here</h2>
-          <p className="mt-2 text-sm text-[var(--slate)]">JPG, PNG, WEBP, or PDF · max 8MB · drag & drop</p>
+          <p className="mt-2 text-sm text-[var(--slate)]">
+            {ALLOWED_UPLOAD_LABEL} · max {MAX_UPLOAD_LABEL} · drag &amp; drop
+          </p>
+          <p className="mt-1 text-xs text-[var(--slate)]">
+            Limit exists so Gemini can finish quickly on phone photos. Larger scans: compress first.
+          </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button
               type="button"

@@ -55,6 +55,9 @@ export default function SiteHeader({ variant = "marketing" }: { variant?: "marke
               <Link href="/app/vault" className="rounded-lg px-3 py-2 text-[var(--slate)] hover:bg-[var(--mist)] hover:text-[var(--ink)]">
                 Vault
               </Link>
+              <Link href="/app/account" className="rounded-lg px-3 py-2 text-[var(--slate)] hover:bg-[var(--mist)] hover:text-[var(--ink)]">
+                Account
+              </Link>
               <Link href="/" className="rounded-lg px-3 py-2 text-[var(--slate)] hover:bg-[var(--mist)] hover:text-[var(--ink)]">
                 Home
               </Link>

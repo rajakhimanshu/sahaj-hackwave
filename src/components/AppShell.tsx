@@ -1,6 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getActiveProfile } from "@/lib/local-profile";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const [who, setWho] = useState("Guest");
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const profile = getActiveProfile();
+      setWho(profile ? profile.displayName : "Guest");
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[var(--paper)] lg:grid lg:grid-cols-[15rem_1fr]">
       <aside className="hidden min-h-screen border-r border-[var(--night)] bg-[var(--night)] p-6 text-white lg:flex lg:flex-col">
@@ -25,6 +39,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             Family vault
           </Link>
           <Link
+            href="/app/account"
+            className="focus-ring block border-l-2 border-transparent px-4 py-3 text-white/65 hover:border-white/30 hover:bg-white/5 hover:text-white"
+          >
+            Family account
+          </Link>
+          <Link
             href="/app?demo=1"
             className="focus-ring block border-l-2 border-transparent px-4 py-3 text-white/65 hover:border-white/30 hover:bg-white/5 hover:text-white"
           >
@@ -40,17 +60,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="mt-auto border-t border-white/15 pt-6">
           <p className="text-[11px] font-semibold text-[var(--glow)]">
-            DEVICE-LOCAL VAULT
+            LOCAL SESSION
           </p>
+          <p className="mt-2 text-sm text-white">{who}</p>
           <p className="mt-2 text-xs leading-5 text-white/50">
-            No login dashboard yet — briefs stay in this browser. Gemini reads
-            uploads only to build the brief.
+            Profiles + vault use this browser only. No external database for the
+            hackathon build.
           </p>
           <Link
-            href="/privacy"
+            href="/app/account"
             className="focus-ring mt-4 inline-block text-xs text-white/65 hover:text-white"
           >
-            Privacy notice →
+            Manage account →
           </Link>
           <Link
             href="/"
@@ -72,6 +93,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <nav className="flex gap-4 text-xs font-semibold text-[var(--ink-soft)]">
             <Link href="/app">Workspace</Link>
             <Link href="/app/vault">Vault</Link>
+            <Link href="/app/account">Account</Link>
           </nav>
         </header>
 

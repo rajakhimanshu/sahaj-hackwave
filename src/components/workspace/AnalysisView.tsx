@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import type { AskResponse, DocumentAnalysis } from "@/lib/types";
-import { downloadReport, printReport } from "@/lib/export-report";
+import {
+  downloadReport,
+  downloadReportPdf,
+  printReport,
+} from "@/lib/export-report";
 import { categoryLabel } from "@/lib/category-focus";
 import CategoryDesk from "./CategoryDesk";
 
@@ -94,10 +98,17 @@ export default function AnalysisView({
           )}
           <button
             type="button"
+            onClick={() => downloadReportPdf(analysis, fileName)}
+            className="focus-ring rounded-xl bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--accent-deep)]"
+          >
+            Download PDF
+          </button>
+          <button
+            type="button"
             onClick={() => downloadReport(analysis, fileName)}
             className="focus-ring rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-[var(--mist)]"
           >
-            Download brief
+            Download TXT
           </button>
           <button
             type="button"
