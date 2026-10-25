@@ -11,6 +11,7 @@ import { categoryLabel } from "@/lib/category-focus";
 import AdSlot from "@/components/AdSlot";
 import CategoryDesk from "./CategoryDesk";
 import DocumentChat from "./DocumentChat";
+import ReadAloud from "./ReadAloud";
 
 const MODES: { id: ReadingMode; label: string }[] = [
   { id: "simple", label: "English" },
@@ -148,6 +149,19 @@ export default function AnalysisView({
       )}
 
       <section className="ruled-paper border border-[var(--night)] p-6 sm:p-8">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-[var(--accent)]">
+              DOCUMENT SUMMARY
+            </p>
+            <h3 className="mt-1 font-display text-2xl text-[var(--night)]">
+              Read it the way your family needs
+            </h3>
+          </div>
+          <span className="border border-[var(--night)] bg-[var(--glow)] px-3 py-1 text-[11px] font-bold text-[var(--night)]">
+            NEW · VOICE READ-ALOUD
+          </span>
+        </div>
         <div className="no-print flex flex-wrap gap-2">
           {MODES.map(({ id, label }) => (
             <button
@@ -166,6 +180,7 @@ export default function AnalysisView({
           ))}
         </div>
         <p className="mt-4 text-base leading-relaxed text-[var(--ink)]">{summary}</p>
+        <ReadAloud text={summary} mode={mode} />
         {analysis.whatHappensIfIgnored && (
           <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <span className="font-semibold">If ignored: </span>

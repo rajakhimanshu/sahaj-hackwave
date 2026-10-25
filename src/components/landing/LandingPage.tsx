@@ -70,9 +70,9 @@ export default function LandingPage() {
         <section className="border-b border-[var(--night)] bg-[var(--night)] text-white">
           <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:grid-cols-3 sm:px-10 lg:px-14">
             {[
-              ["No login dashboard yet", "Vault stays on-device — fewer personal data stores under DPDP."],
-              ["Category desks", "Bills, school, loans, and forms each get their own guidance shape."],
-              ["Random photos flagged", "Selfies and memes are not treated like electricity bills."],
+              ["Voice + languages", "Listen to briefs in English, Hindi, Marathi and more."],
+              ["Category desks", "Bills, IDs, and legal notices each get their own guidance shape."],
+              ["Local vault · free core", "On-device storage. Transparent ads fund the free tier."],
             ].map(([title, copy]) => (
               <article key={title} className="border-l-2 border-[var(--glow)] pl-4">
                 <h3 className="text-sm font-semibold text-[var(--glow)]">{title}</h3>

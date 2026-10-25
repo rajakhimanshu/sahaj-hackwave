@@ -25,6 +25,9 @@ export default function SiteFooter() {
           <Link href="/about" className="focus-ring w-fit hover:text-[var(--accent)]">
             About
           </Link>
+          <Link href="/features" className="focus-ring w-fit hover:text-[var(--accent)]">
+            Features
+          </Link>
           <Link href="/earn" className="focus-ring w-fit hover:text-[var(--accent)]">
             Earn / ads model
           </Link>
