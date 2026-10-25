@@ -59,7 +59,7 @@ export default function AnalysisView({
 
   return (
     <div className="space-y-6 print:space-y-4">
-      <div className="flex flex-col gap-4 rounded-2xl border border-[var(--line)] bg-white p-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="folder-shadow flex flex-col gap-4 border border-[var(--night)] bg-[var(--panel)] p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-4">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -120,7 +120,7 @@ export default function AnalysisView({
         />
       </div>
 
-      <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+      <section className="ruled-paper border border-[var(--night)] p-6 sm:p-8">
         <div className="no-print flex flex-wrap gap-2">
           {(
             [
@@ -154,7 +154,7 @@ export default function AnalysisView({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+        <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
           <h3 className="font-display text-xl text-[var(--night)]">Action plan</h3>
           <ol className="mt-4 space-y-3">
             {(analysis.actionChecklist || []).map((item, i) => (
@@ -178,7 +178,7 @@ export default function AnalysisView({
           </ol>
         </section>
 
-        <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+        <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
           <h3 className="font-display text-xl text-[var(--night)]">Money & dates</h3>
           <ul className="mt-4 space-y-2">
             {(analysis.amounts || []).map((a) => (
@@ -203,7 +203,7 @@ export default function AnalysisView({
 
       {(analysis.riskFlags?.length > 0 || analysis.consumerTips?.length > 0) && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
             <h3 className="font-display text-xl text-[var(--night)]">Risks</h3>
             <ul className="mt-4 space-y-2">
               {(analysis.riskFlags || []).map((r, i) => (
@@ -222,7 +222,7 @@ export default function AnalysisView({
               ))}
             </ul>
           </section>
-          <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
             <h3 className="font-display text-xl text-[var(--night)]">Consumer tips</h3>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-[var(--ink-soft)]">
               {(analysis.consumerTips || []).map((t) => (
@@ -242,7 +242,7 @@ export default function AnalysisView({
       {(analysis.glossary?.length > 0 || analysis.keyQuotes?.length > 0) && (
         <div className="grid gap-6 lg:grid-cols-2">
           {analysis.glossary?.length > 0 && (
-            <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+            <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
               <h3 className="font-display text-xl text-[var(--night)]">Glossary</h3>
               <dl className="mt-4 space-y-3">
                 {analysis.glossary.map((g) => (
@@ -255,7 +255,7 @@ export default function AnalysisView({
             </section>
           )}
           {analysis.keyQuotes?.length > 0 && (
-            <section className="rounded-2xl border border-[var(--line)] bg-white p-6">
+            <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
               <h3 className="font-display text-xl text-[var(--night)]">From the document</h3>
               <ul className="mt-4 space-y-2">
                 {analysis.keyQuotes.map((q) => (
@@ -269,7 +269,7 @@ export default function AnalysisView({
         </div>
       )}
 
-      <section className="no-print rounded-2xl border border-[var(--line)] bg-white p-6">
+      <section className="no-print border border-[var(--night)] bg-[var(--panel)] p-6">
         <h3 className="font-display text-xl text-[var(--night)]">Ask Sahaj</h3>
         <p className="mt-1 text-sm text-[var(--slate)]">Grounded answers only from this analysis.</p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -333,7 +333,7 @@ function Metric({
           ? "text-[var(--ok)]"
           : "text-[var(--night)]";
   return (
-    <div className="rounded-2xl border border-[var(--line)] bg-white p-4">
+    <div className="border border-[var(--night)] bg-[var(--panel)] p-4">
       <p className="text-xs text-[var(--slate)]">{label}</p>
       <p className={`mt-1 font-display text-3xl ${color}`}>{value}</p>
     </div>

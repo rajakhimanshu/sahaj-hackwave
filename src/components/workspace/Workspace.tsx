@@ -3,19 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DocumentAnalysis } from "@/lib/types";
 import { saveToVault, vaultStats } from "@/lib/vault";
+import { DEMO_ANALYSIS } from "@/lib/demo-analysis";
 import AnalysisView from "./AnalysisView";
 
 type Phase = "idle" | "analyzing" | "ready" | "error";
 
-const SAMPLES = [
-  { label: "Utility bill sample", hint: "Try any electricity / water bill photo" },
-  { label: "School notice", hint: "Circular, fee note, parent meeting letter" },
-  { label: "Insurance / loan", hint: "Premium notice or EMI reminder" },
-];
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+]);
 
 export default function Workspace() {
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -26,8 +30,19 @@ export default function Workspace() {
   const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
-    setStats(vaultStats());
-  }, [analysis]);
+    const frame = requestAnimationFrame(() => {
+      setStats(vaultStats());
+      if (new URLSearchParams(window.location.search).get("demo") === "1") {
+        setFileName("BESCOM-March-demo.pdf");
+        setAnalysis(DEMO_ANALYSIS);
+        setPhase("ready");
+      }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -37,12 +52,29 @@ export default function Workspace() {
   async function onFile(file: File) {
     setError(null);
     setAnalysis(null);
+
+    if (!ALLOWED_TYPES.has(file.type)) {
+      setPhase("error");
+      setError("This file type is not supported. Choose a JPG, PNG, WEBP, GIF, or PDF.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setPhase("error");
+      setError("This file is larger than 8MB. Compress it, then try again.");
+      return;
+    }
+
     setFileName(file.name);
     setPhase("analyzing");
 
-    let previewUrl: string | null = null;
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
     if (file.type.startsWith("image/")) {
-      previewUrl = URL.createObjectURL(file);
+      const previewUrl = URL.createObjectURL(file);
+      previewUrlRef.current = previewUrl;
       setPreview(previewUrl);
     } else {
       setPreview(null);
@@ -69,27 +101,36 @@ export default function Workspace() {
     saveToVault({
       fileName,
       analysis,
-      previewDataUrl: preview || undefined,
     });
     setStats(vaultStats());
     showToast("Saved to family vault");
   }
 
+  function loadDemo() {
+    setError(null);
+    setPreview(null);
+    setFileName("BESCOM-March-demo.pdf");
+    setAnalysis(DEMO_ANALYSIS);
+    setPhase("ready");
+    showToast("Demo brief loaded");
+  }
+
   return (
     <div>
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-8 flex flex-col gap-5 border-b border-[var(--night)] pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl text-[var(--night)] sm:text-4xl">Workspace</h1>
+          <p className="text-xs font-semibold text-[var(--accent)]">NEW BRIEF</p>
+          <h1 className="mt-2 font-display text-4xl text-[var(--night)] sm:text-5xl">Understand a document</h1>
           <p className="mt-2 max-w-xl text-[var(--slate)]">
             Drop a document. Sahaj builds a bilingual brief, scam check, and action plan.
           </p>
         </div>
         <div className="flex gap-3 text-sm">
-          <div className="rounded-xl border border-[var(--line)] bg-white px-4 py-2">
+          <div className="border border-[var(--night)] bg-[var(--panel)] px-4 py-2">
             <span className="text-[var(--slate)]">Vault </span>
             <span className="font-semibold">{stats.total}</span>
           </div>
-          <div className="rounded-xl border border-[var(--line)] bg-white px-4 py-2">
+          <div className="border border-[var(--night)] bg-[var(--panel)] px-4 py-2">
             <span className="text-[var(--slate)]">Attention </span>
             <span className="font-semibold text-[var(--warn)]">{stats.needsAttention}</span>
           </div>
@@ -108,25 +149,28 @@ export default function Workspace() {
           const f = e.dataTransfer.files?.[0];
           if (f) void onFile(f);
         }}
-        className={`rounded-3xl border-2 border-dashed bg-white p-8 transition ${
-          dragOver ? "border-[var(--accent)] bg-[color-mix(in_oklab,var(--glow)_25%,white)]" : "border-[var(--line)]"
+        className={`ruled-paper border-2 border-dashed p-8 transition sm:p-12 ${
+          dragOver ? "border-[var(--accent)] bg-[color-mix(in_oklab,var(--glow)_25%,white)]" : "border-[var(--night)]"
         }`}
       >
         <div className="mx-auto max-w-lg text-center">
-          <h2 className="font-display text-2xl text-[var(--night)]">Upload document</h2>
+          <div className="mx-auto mb-5 flex h-14 w-12 rotate-3 items-center justify-center border border-[var(--night)] bg-[var(--glow)] text-xl">
+            +
+          </div>
+          <h2 className="font-display text-3xl text-[var(--night)]">Place your document here</h2>
           <p className="mt-2 text-sm text-[var(--slate)]">JPG, PNG, WEBP, or PDF · max 8MB · drag & drop</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="h-12 rounded-2xl bg-[var(--night)] px-6 text-sm font-semibold text-white"
+              className="focus-ring h-12 bg-[var(--night)] px-6 text-sm font-semibold text-white hover:bg-[var(--accent)]"
             >
               Choose file
             </button>
             <button
               type="button"
               onClick={() => cameraRef.current?.click()}
-              className="h-12 rounded-2xl border border-[var(--line)] px-6 text-sm font-semibold text-[var(--ink)] hover:bg-[var(--mist)]"
+              className="focus-ring h-12 border border-[var(--night)] bg-[var(--panel)] px-6 text-sm font-semibold text-[var(--ink)] hover:bg-[var(--mist)]"
             >
               Use camera
             </button>
@@ -171,25 +215,27 @@ export default function Workspace() {
         )}
 
         {error && (
-          <p className="mx-auto mt-6 max-w-lg rounded-xl bg-red-50 px-4 py-3 text-center text-sm text-red-800">
+          <p role="alert" className="mx-auto mt-6 max-w-lg border border-[var(--danger)] bg-red-50 px-4 py-3 text-center text-sm text-red-800">
             {error}
           </p>
         )}
       </div>
 
-      {phase === "idle" && (
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          {SAMPLES.map((s) => (
-            <button
-              key={s.label}
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="rounded-2xl border border-[var(--line)] bg-white p-4 text-left hover:border-[var(--accent)]"
-            >
-              <p className="font-medium text-[var(--night)]">{s.label}</p>
-              <p className="mt-1 text-xs text-[var(--slate)]">{s.hint}</p>
-            </button>
-          ))}
+      {(phase === "idle" || phase === "error") && (
+        <div className="mt-6 grid border border-[var(--night)] bg-[var(--panel)] sm:grid-cols-[1fr_auto]">
+          <div className="p-5 sm:p-6">
+            <p className="font-semibold text-[var(--night)]">No document nearby?</p>
+            <p className="mt-1 text-sm text-[var(--slate)]">
+              Load a complete electricity-bill brief. Every mode, checklist, vault, export, and Q&A control stays usable.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={loadDemo}
+            className="focus-ring border-t border-[var(--night)] bg-[var(--glow)] px-7 py-4 text-sm font-bold text-[var(--night)] hover:bg-[#e2a936] sm:border-l sm:border-t-0"
+          >
+            Load judge demo ↗
+          </button>
         </div>
       )}
 
@@ -205,7 +251,7 @@ export default function Workspace() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-[var(--night)] px-5 py-2.5 text-sm text-white shadow-lg">
+        <div role="status" className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 border border-white/20 bg-[var(--night)] px-5 py-2.5 text-sm text-white shadow-lg">
           {toast}
         </div>
       )}

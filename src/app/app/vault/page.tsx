@@ -15,30 +15,32 @@ export default function VaultPage() {
   }
 
   useEffect(() => {
-    refresh();
+    const frame = requestAnimationFrame(refresh);
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const open = items.find((i) => i.id === openId);
 
   return (
     <div>
-      <div className="mb-8 flex items-end justify-between gap-4">
+      <div className="mb-8 flex items-end justify-between gap-4 border-b border-[var(--night)] pb-7">
         <div>
-          <h1 className="font-display text-3xl text-[var(--night)] sm:text-4xl">Family vault</h1>
+          <p className="text-xs font-semibold text-[var(--accent)]">ON THIS DEVICE</p>
+          <h1 className="mt-2 font-display text-4xl text-[var(--night)] sm:text-5xl">Family vault</h1>
           <p className="mt-2 text-[var(--slate)]">
             Documents stay on this device. Clear browser data to remove them.
           </p>
         </div>
-        <Link href="/app" className="rounded-xl bg-[var(--night)] px-4 py-2.5 text-sm font-semibold text-white">
+        <Link href="/app" className="focus-ring bg-[var(--night)] px-4 py-2.5 text-sm font-semibold text-white">
           New brief
         </Link>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-[var(--line)] bg-white px-6 py-16 text-center">
+        <div className="ruled-paper border-2 border-dashed border-[var(--night)] px-6 py-16 text-center">
           <p className="font-display text-2xl text-[var(--night)]">Vault is empty</p>
           <p className="mt-2 text-sm text-[var(--slate)]">Analyze a document, then tap Save to vault.</p>
-          <Link href="/app" className="mt-6 inline-flex rounded-xl border border-[var(--line)] px-4 py-2 text-sm font-medium">
+          <Link href="/app" className="focus-ring mt-6 inline-flex border border-[var(--night)] bg-[var(--panel)] px-4 py-2 text-sm font-medium">
             Go to workspace
           </Link>
         </div>
@@ -52,8 +54,8 @@ export default function VaultPage() {
                   onClick={() => setOpenId(item.id)}
                   className={`w-full rounded-2xl border p-4 text-left transition ${
                     openId === item.id
-                      ? "border-[var(--accent)] bg-white shadow-sm"
-                      : "border-[var(--line)] bg-white hover:border-[var(--slate)]"
+                      ? "border-[var(--accent)] bg-[var(--panel)] shadow-[5px_5px_0_var(--glow)]"
+                      : "border-[var(--night)] bg-[var(--panel)] hover:border-[var(--accent)]"
                   }`}
                 >
                   <div className="flex gap-3">
@@ -79,7 +81,7 @@ export default function VaultPage() {
             ))}
           </ul>
 
-          <div className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <div className="border border-[var(--night)] bg-[var(--panel)] p-6">
             {open ? (
               <>
                 <h2 className="font-display text-2xl text-[var(--night)]">{open.analysis.title}</h2>

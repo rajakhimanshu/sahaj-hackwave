@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --night: #07111f;
-  --ink: #0d1b2a;
-  --ink-soft: #243447;
-  --slate: #5a6b7d;
-  --line: #d5dde6;
-  --mist: #e8eef4;
-  --paper: #f4f7fa;
-  --panel: #ffffff;
-  --accent: #0d6e6e;
-  --accent-deep: #0a5252;
-  --warn: #b45309;
-  --danger: #b42318;
-  --ok: #157a4b;
-  --glow: #9fd6d0;
+  --night: #142e3f;
+  --ink: #162a35;
+  --ink-soft: #354c55;
+  --slate: #65777b;
+  --line: #d8d0bf;
+  --mist: #e9e4d8;
+  --paper: #f5f0e6;
+  --panel: #fffdf7;
+  --accent: #d95f3f;
+  --accent-deep: #ad4028;
+  --warn: #a75d12;
+  --danger: #a3372a;
+  --ok: #356b56;
+  --glow: #efb84f;
   --background: var(--paper);
   --foreground: var(--ink);
 }
@@ -50,34 +50,31 @@ body {
   background: color-mix(in oklab, var(--accent) 28%, white);
 }
 
-.hero-glow {
-  background:
-    radial-gradient(900px 520px at 18% -10%, rgba(13, 110, 110, 0.45), transparent 58%),
-    radial-gradient(700px 420px at 88% 8%, rgba(159, 214, 208, 0.18), transparent 55%),
-    radial-gradient(600px 400px at 50% 100%, rgba(36, 52, 71, 0.5), transparent 60%);
+.paper-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
+  background-size: 180px;
 }
 
-.hero-paper {
+.ruled-paper {
+  background-color: var(--panel);
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: linear-gradient(180deg, transparent, black 30%, black);
+    linear-gradient(90deg, transparent 0 3.75rem, rgba(217, 95, 63, 0.2) 3.75rem 3.8rem, transparent 3.8rem),
+    repeating-linear-gradient(180deg, transparent 0 2rem, rgba(20, 46, 63, 0.1) 2rem 2.05rem);
 }
 
-.product-mock {
-  animation: mock-lift 1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+.stamp {
+  transform: rotate(-7deg);
+  border: 2px solid currentColor;
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px currentColor;
 }
 
-@keyframes mock-lift {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.folder-shadow {
+  box-shadow: 12px 14px 0 rgba(20, 46, 63, 0.12);
+}
+
+.focus-ring:focus-visible {
+  outline: 3px solid var(--glow);
+  outline-offset: 3px;
 }
 
 @keyframes rise {

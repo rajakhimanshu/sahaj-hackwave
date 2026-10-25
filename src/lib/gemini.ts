@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AskResponse, DocumentAnalysis } from "./types";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const FALLBACK_MODEL = "gemini-3.8-flash";
 
 function getClient() {
   const key = process.env.GEMINI_API_KEY;
@@ -23,6 +24,45 @@ function extractJson<T>(text: string): T {
     throw new Error("Gemini did not return JSON");
   }
   return JSON.parse(cleaned.slice(start, end + 1)) as T;
+}
+
+async function generateWithFallback(
+  content: Parameters<ReturnType<GoogleGenerativeAI["getGenerativeModel"]>["generateContent"]>[0],
+  temperature: number
+) {
+  const genAI = getClient();
+  const models = [...new Set([MODEL, FALLBACK_MODEL])];
+  let lastError: unknown;
+
+  for (const modelName of models) {
+    try {
+      const model = genAI.getGenerativeModel(
+        {
+          model: modelName,
+          generationConfig: {
+            temperature,
+            responseMimeType: "application/json",
+          },
+        },
+        { timeout: 15_000 }
+      );
+      const result = await model.generateContent(content);
+      return result.response.text();
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : "";
+      const retryable =
+        message.includes("503") ||
+        message.includes("429") ||
+        message.toLowerCase().includes("high demand") ||
+        message.toLowerCase().includes("timed out");
+      if (!retryable) break;
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Gemini is temporarily unavailable");
 }
 
 const ANALYZE_PROMPT = `You are Sahaj — a production-grade document intelligence system for Indian families.
@@ -61,36 +101,18 @@ export async function analyzeDocument(
   base64: string,
   mimeType: string
 ): Promise<DocumentAnalysis> {
-  const genAI = getClient();
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    generationConfig: {
-      temperature: 0.15,
-      responseMimeType: "application/json",
-    },
-  });
-
-  const result = await model.generateContent([
+  const text = await generateWithFallback([
     { text: ANALYZE_PROMPT },
     { inlineData: { data: base64, mimeType } },
-  ]);
+  ], 0.15);
 
-  return extractJson<DocumentAnalysis>(result.response.text());
+  return extractJson<DocumentAnalysis>(text);
 }
 
 export async function askAboutDocument(
   analysis: DocumentAnalysis,
   question: string
 ): Promise<AskResponse> {
-  const genAI = getClient();
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    generationConfig: {
-      temperature: 0.25,
-      responseMimeType: "application/json",
-    },
-  });
-
   const prompt = `You are Sahaj, a careful document copilot for Indian families.
 Answer ONLY from the analysis JSON. If unknown, say you cannot confirm from this document.
 Suggest 2 short follow-up questions the user might ask next.
@@ -108,6 +130,6 @@ Return ONLY JSON:
   "followUps": ["q1","q2"]
 }`;
 
-  const result = await model.generateContent(prompt);
-  return extractJson<AskResponse>(result.response.text());
+  const text = await generateWithFallback(prompt, 0.25);
+  return extractJson<AskResponse>(text);
 }

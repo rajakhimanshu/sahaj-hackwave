@@ -49,6 +49,17 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Analysis failed";
     console.error("[analyze]", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const unavailable =
+      message.includes("503") ||
+      message.includes("429") ||
+      message.toLowerCase().includes("high demand");
+    return NextResponse.json(
+      {
+        error: unavailable
+          ? "Gemini is busy right now. Wait a moment and try again."
+          : "Sahaj could not read this document. Try a clearer image or PDF.",
+      },
+      { status: unavailable ? 503 : 500 }
+    );
   }
 }
