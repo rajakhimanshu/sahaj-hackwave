@@ -10,6 +10,7 @@ import {
 import { categoryLabel } from "@/lib/category-focus";
 import AdSlot from "@/components/AdSlot";
 import { openWhatsAppShare } from "@/lib/share-card";
+import BillCompare from "./BillCompare";
 import CategoryDesk from "./CategoryDesk";
 import DocumentChat from "./DocumentChat";
 import ReadAloud from "./ReadAloud";
@@ -133,6 +134,10 @@ export default function AnalysisView({
       </div>
 
       <CategoryDesk analysis={analysis} />
+
+      {everyday && analysis.category === "utility_bill" && (
+        <BillCompare analysis={analysis} fileName={fileName} />
+      )}
 
       {everyday && <ShareFamilyCard analysis={analysis} />}
 

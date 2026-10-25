@@ -74,12 +74,12 @@ const rows = [
     cta: "Revenue model",
   },
   {
-    tag: "NEXT",
+    tag: "LIVE",
     title: "Bill compare",
     detail:
-      "Next in this build cycle — month-vs-month utility bill compare on the same desk.",
-    href: "/about",
-    cta: "About roadmap",
+      "Month-vs-month utility compare against vault history — with a demo baseline on the sample electricity bill.",
+    href: "/app?demo=1",
+    cta: "See on demo bill",
   },
 ];
 
