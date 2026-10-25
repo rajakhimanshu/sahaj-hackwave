@@ -10,6 +10,14 @@ export const DEMO_ANALYSIS: DocumentAnalysis = {
     "This is the March electricity bill for your home. The total amount due is ₹2,840 and it should be paid by 28 March to avoid a late fee or possible service interruption.",
   summaryHindi:
     "यह आपके घर का मार्च महीने का बिजली बिल है। कुल ₹2,840 का भुगतान 28 मार्च तक करें, ताकि लेट फीस या बिजली कटने का जोखिम न हो।",
+  summaryMarathi:
+    "हा तुमच्या घराचा मार्च महिन्याचा वीज बिल आहे. एकूण ₹२,८४० भरावेत आणि उशीर शुल्क टाळण्यासाठी २८ मार्चपर्यंत भरा.",
+  summaryTamil:
+    "இது உங்கள் வீட்டின் மார்ச் மின்சார பில்கள். மொத்தம் ₹2,840; தாமதக் கட்டணம் தவிர்க்க 28 மார்ச் முன் செலுத்துங்கள்.",
+  summaryBengali:
+    "এটি আপনার বাড়ির মার্চ মাসের বিদ্যুৎ বিল। মোট ₹২,৮৪০; বিলম্ব ফি এড়াতে ২৮ মার্চের মধ্যে পরিশোধ করুন।",
+  summaryGujarati:
+    "આ તમારા ઘરનું માર્ચનું વીજળી બિલ છે. કુલ ₹૨,૮૪૦; વિલંબ ફી ટાળવા ૨૮ માર્ચ પહેલાં ભરો.",
   summaryElder:
     "This paper is the electricity bill for the home. The electricity company is asking for ₹2,840. Please ask a trusted family member to pay it through the official BESCOM website or app before 28 March, and keep the receipt.",
   eli5:

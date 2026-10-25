@@ -34,6 +34,9 @@ export default function SiteHeader({ variant = "marketing" }: { variant?: "marke
               <Link href="/security" className="focus-ring hidden px-3 py-2 text-[var(--ink-soft)] hover:text-[var(--accent)] md:inline">
                 Security
               </Link>
+              <Link href="/earn" className="focus-ring hidden px-3 py-2 text-[var(--ink-soft)] hover:text-[var(--accent)] lg:inline">
+                Earn
+              </Link>
               <Link href="/about" className="focus-ring hidden px-3 py-2 text-[var(--ink-soft)] hover:text-[var(--accent)] lg:inline">
                 About
               </Link>

@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import AdSlot from "@/components/AdSlot";
 import { normalizeAnalysis } from "@/lib/category-focus";
+import { humanizeApiError } from "@/lib/errors";
 import {
   ALLOWED_UPLOAD_LABEL,
   MAX_UPLOAD_BYTES,
@@ -107,7 +109,7 @@ export default function Workspace() {
       );
     } catch (e) {
       setPhase("error");
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(humanizeApiError(e, "Something went wrong while reading the document."));
     }
   }
 
@@ -252,12 +254,28 @@ export default function Workspace() {
         )}
       </div>
 
+      <div className="mt-6">
+        <AdSlot variant="banner" />
+      </div>
+
+      <p className="mt-4 text-xs leading-5 text-[var(--slate)]">
+        Data note: uploads go to Gemini only to build the brief. Vault + family
+        account stay in this browser. We do not sell document contents for ads.{" "}
+        <Link href="/earn" className="underline underline-offset-2">
+          Revenue model
+        </Link>
+        {" · "}
+        <Link href="/security" className="underline underline-offset-2">
+          Security &amp; DPDP
+        </Link>
+      </p>
+
       {(phase === "idle" || phase === "error") && (
         <div className="mt-6 grid border border-[var(--night)] bg-[var(--panel)] sm:grid-cols-[1fr_auto]">
           <div className="p-5 sm:p-6">
             <p className="font-semibold text-[var(--night)]">No document nearby?</p>
             <p className="mt-1 text-sm text-[var(--slate)]">
-              Load a complete electricity-bill brief. Every mode, checklist, vault, export, and Q&A control stays usable.
+              Load a complete electricity-bill brief. Chatbot, languages, vault, PDF, and category desk stay usable.
             </p>
           </div>
           <button

@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { normalizeAnalysis } from "./category-focus";
-import type { AskResponse, DocumentAnalysis } from "./types";
+import { isRetryableModelError } from "./errors";
+import type { AskResponse, ChatTurn, DocumentAnalysis } from "./types";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 const FALLBACK_MODELS = [
@@ -32,7 +33,9 @@ function extractJson<T>(text: string): T {
 }
 
 async function generateWithFallback(
-  content: Parameters<ReturnType<GoogleGenerativeAI["getGenerativeModel"]>["generateContent"]>[0],
+  content: Parameters<
+    ReturnType<GoogleGenerativeAI["getGenerativeModel"]>["generateContent"]
+  >[0],
   temperature: number,
   timeouts = { primary: 25_000, fallback: 10_000 }
 ) {
@@ -57,14 +60,7 @@ async function generateWithFallback(
     } catch (error) {
       lastError = error;
       const message = error instanceof Error ? error.message : "";
-      const retryable =
-        message.includes("503") ||
-        message.includes("429") ||
-        message.includes("404") ||
-        message.toLowerCase().includes("high demand") ||
-        message.toLowerCase().includes("timed out") ||
-        message.toLowerCase().includes("aborted");
-      if (!retryable) break;
+      if (!isRetryableModelError(message)) break;
     }
   }
 
@@ -73,99 +69,117 @@ async function generateWithFallback(
     : new Error("Gemini is temporarily unavailable");
 }
 
-const ANALYZE_PROMPT = `You are Sahaj — a production-grade document intelligence system for Indian families.
-You ONLY treat everyday household / civic paperwork as primary: utility bills, school notices, insurance, loans, tax, property, medical papers, government forms and official notices.
+const ANALYZE_PROMPT = `You are Sahaj — a production document intelligence system for Indian families.
+You help with document understanding, summaries, and civic/legal literacy education (NOT legal advice).
 
-Analyze carefully. Extract only what is visible. Never invent amounts or dates.
+CRITICAL: Output MUST be category-specific. An ID card must NEVER look like a bill brief. A court/legal notice must NEVER look like a utility payment desk.
 
-If the upload is a selfie, meme, random photo, chat screenshot, food, landscape, product packaging, blank page, or anything that is NOT household/civic paperwork:
-- set isEverydayDocument=false
-- set documentKind="not_a_document"
-- set category="not_a_document"
-- set confidence <= 0.35
-- set scamScore=0 unless it is phishing bait
-- leave amounts/importantDates empty unless printed on a real notice
-- put a clear rejectionHint
-- still return honest summaries explaining what the image appears to be
+Categories (pick exactly one):
+utility_bill | school_notice | insurance | loan_finance | government | legal_notice | id_kyc | medical | tax | property | other | not_a_document
 
-categoryFocus MUST change by category — do not reuse the same panel titles for every document:
-- utility_bill: payment desk (amount due, due date, consumer ID checks)
-- school_notice: parent desk (deadline, fee, what child needs)
-- insurance: policy/claim desk
-- loan_finance: EMI / recovery caution desk
-- government: civic form desk
-- medical: care paperwork desk
-- tax: compliance desk
-- property: property caution desk
-- not_a_document: rejection desk
+Category rules:
+- utility_bill: amounts due, due dates, consumer/RR numbers, payment channels
+- school_notice: parent actions, fees, deadlines, what child needs
+- insurance: policy/claim language, premium, insurer
+- loan_finance: EMI, recovery caution, lender verification
+- government: forms/certificates/enrolment (non-ID blank forms)
+- legal_notice: lawyer letters, court/police notices, eviction, demand notices with legal tone — emphasize escalation + "not legal advice"
+- id_kyc: Aadhaar/PAN/Voter/Passport/Driving licence cards or photocopies — privacy desk; NEVER invent payment amounts; warn about sharing; do not treat as a bill
+- medical: prescriptions/reports
+- tax: notices/challans
+- property: rent/sale/lease papers
+- not_a_document: selfies, memes, food, random photos, chat screenshots
 
-Return ONLY valid JSON with this exact shape:
+If not everyday paperwork:
+- isEverydayDocument=false, documentKind="not_a_document", category="not_a_document"
+- confidence <= 0.35, empty amounts/dates unless literally printed on a notice
+
+categoryFocus MUST differ by category (different headline + panels). Never reuse bill panels for ID or legal notices.
+
+Provide summaries in:
+English (summarySimple), Hindi (summaryHindi), Marathi (summaryMarathi), Tamil (summaryTamil), Bengali (summaryBengali), Gujarati (summaryGujarati), Elder English (summaryElder), ELI5 (eli5).
+
+Extract only what is visible. Never invent amounts, IDs, or dates.
+
+Return ONLY valid JSON:
 {
-  "documentType": "specific type e.g. Electricity bill / CBSE circular / Selfie photo",
-  "category": "utility_bill|school_notice|insurance|loan_finance|government|medical|tax|property|other|not_a_document",
+  "documentType": "specific visible type",
+  "category": "utility_bill|school_notice|insurance|loan_finance|government|legal_notice|id_kyc|medical|tax|property|other|not_a_document",
   "documentKind": "everyday_paperwork|not_a_document|unclear",
   "isEverydayDocument": true,
   "rejectionHint": "only when not everyday paperwork",
   "title": "short human title",
-  "summarySimple": "2-4 sentences plain English",
-  "summaryHindi": "same in simple Hindi Devanagari",
-  "summaryElder": "very slow, respectful explanation for a grandparent, English",
-  "eli5": "one short paragraph as if explaining to a curious 10-year-old",
+  "summarySimple": "2-4 sentences English",
+  "summaryHindi": "simple Hindi Devanagari",
+  "summaryMarathi": "simple Marathi Devanagari",
+  "summaryTamil": "simple Tamil",
+  "summaryBengali": "simple Bengali",
+  "summaryGujarati": "simple Gujarati",
+  "summaryElder": "slow respectful English for elders",
+  "eli5": "simple explanation for a child",
   "parties": ["issuer", "recipient if visible"],
-  "amounts": [{"label":"","value":"₹…","note":"optional context"}],
+  "amounts": [{"label":"","value":"₹…","note":"optional"}],
   "importantDates": [{"label":"","date":"as written","urgency":"low|medium|high"}],
-  "actionChecklist": [{"step":"clear next action","deadline":"optional","priority":"low|medium|high","doneHint":"how they know it's done"}],
-  "documentsNeeded": ["papers they may need"],
+  "actionChecklist": [{"step":"","deadline":"optional","priority":"low|medium|high","doneHint":""}],
+  "documentsNeeded": [],
   "riskFlags": [{"level":"info|warning|danger","message":""}],
   "scamScore": 0,
-  "consumerTips": ["India-relevant tips for THIS category only"],
-  "familyWhoShouldKnow": ["who in a typical family should see this"],
-  "keyQuotes": ["short exact phrases copied from the document if readable"],
-  "glossary": [{"term":"jargon from doc","meaning":"plain meaning"}],
+  "consumerTips": ["category-specific tips only"],
+  "familyWhoShouldKnow": [],
+  "keyQuotes": [],
+  "glossary": [{"term":"","meaning":""}],
   "confidence": 0.0,
-  "whatHappensIfIgnored": "practical consequence if they do nothing",
+  "whatHappensIfIgnored": "",
   "categoryFocus": {
-    "headline": "category-specific desk title",
+    "headline": "desk title for THIS category",
     "metrics": [{"label":"","value":"","hint":"optional"}],
-    "panels": [{"title":"category-specific panel","items":["..."]}],
-    "primaryAction": "one main next step for this category"
+    "panels": [{"title":"","items":[""]}],
+    "primaryAction": ""
   },
   "legalGuidance": {
     "isLegalOrOfficial": false,
-    "documentNature": "plain description of document nature",
-    "obligations": ["actions explicitly required; empty if none"],
-    "rightsOrOptions": ["options explicitly stated; do not invent rights"],
-    "escalationSteps": ["safe practical escalation"],
-    "officialHelp": ["authority or professional category; never fabricate phone numbers/URLs unless printed"],
-    "urgencyReason": "why this is or is not time-sensitive"
+    "documentNature": "",
+    "obligations": [],
+    "rightsOrOptions": [],
+    "escalationSteps": [],
+    "officialHelp": [],
+    "urgencyReason": ""
   }
 }
 
-scamScore: 0-100. Higher if pressure tactics, unusual payment asks, spoofed logos, typos, urgency without official channel.
-For legalGuidance: document education, not legal advice. Never invent legal rights or remedies.`;
+For id_kyc: leave amounts empty unless a fee is printed; focus privacy, verification, official update channels.
+For legal_notice: prioritize obligations/options/escalation; never invent remedies.
+scamScore 0-100 for pressure tactics / fake payment asks.`;
 
 export async function analyzeDocument(
   base64: string,
   mimeType: string
 ): Promise<DocumentAnalysis> {
-  const text = await generateWithFallback([
-    { text: ANALYZE_PROMPT },
-    { inlineData: { data: base64, mimeType } },
-  ], 0.15, { primary: 55_000, fallback: 25_000 });
+  const text = await generateWithFallback(
+    [{ text: ANALYZE_PROMPT }, { inlineData: { data: base64, mimeType } }],
+    0.15,
+    { primary: 55_000, fallback: 25_000 }
+  );
 
   return normalizeAnalysis(extractJson<DocumentAnalysis>(text));
 }
 
 export async function askAboutDocument(
   analysis: DocumentAnalysis,
-  question: string
+  question: string,
+  history: ChatTurn[] = []
 ): Promise<AskResponse> {
-  const prompt = `You are Sahaj, a careful document copilot for Indian families.
-Answer ONLY from the analysis JSON. If unknown, say you cannot confirm from this document.
-Suggest 2 short follow-up questions the user might ask next.
+  const prompt = `You are Sahaj chatbot — a careful document understanding copilot for Indian families.
+Answer ONLY from the analysis JSON and prior chat turns. If unknown, say you cannot confirm from this document.
+Match the answer style to the document category (ID privacy vs bill payment vs legal notice).
+Never invent amounts, legal rights, or ID numbers.
+Suggest 2 short follow-ups.
 
 Analysis:
 ${JSON.stringify(analysis, null, 2)}
+
+Recent chat:
+${JSON.stringify(history.slice(-6), null, 2)}
 
 Question: ${question}
 
@@ -173,6 +187,7 @@ Return ONLY JSON:
 {
   "answer": "plain English, concrete",
   "answerHindi": "simple Hindi",
+  "answerMarathi": "simple Marathi",
   "citations": ["fields used"],
   "followUps": ["q1","q2"]
 }`;

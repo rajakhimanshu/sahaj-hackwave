@@ -8,6 +8,8 @@ export type DocumentCategory =
   | "insurance"
   | "loan_finance"
   | "government"
+  | "legal_notice"
+  | "id_kyc"
   | "medical"
   | "tax"
   | "property"
@@ -18,6 +20,16 @@ export type DocumentKind =
   | "everyday_paperwork"
   | "not_a_document"
   | "unclear";
+
+export type ReadingMode =
+  | "simple"
+  | "hindi"
+  | "marathi"
+  | "tamil"
+  | "bengali"
+  | "gujarati"
+  | "elder"
+  | "eli5";
 
 export type CategoryMetric = {
   label: string;
@@ -47,6 +59,10 @@ export type DocumentAnalysis = {
   title: string;
   summarySimple: string;
   summaryHindi: string;
+  summaryMarathi: string;
+  summaryTamil: string;
+  summaryBengali: string;
+  summaryGujarati: string;
   summaryElder: string;
   eli5: string;
   parties: string[];
@@ -79,9 +95,15 @@ export type DocumentAnalysis = {
   };
 };
 
+export type ChatTurn = {
+  role: "user" | "assistant";
+  text: string;
+};
+
 export type AskResponse = {
   answer: string;
   answerHindi: string;
+  answerMarathi?: string;
   citations: string[];
   followUps: string[];
   mode?: "gemini" | "grounded-fallback";

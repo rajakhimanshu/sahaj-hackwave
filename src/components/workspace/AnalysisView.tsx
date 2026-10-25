@@ -1,16 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import type { AskResponse, DocumentAnalysis } from "@/lib/types";
+import type { DocumentAnalysis, ReadingMode } from "@/lib/types";
 import {
   downloadReport,
   downloadReportPdf,
   printReport,
 } from "@/lib/export-report";
 import { categoryLabel } from "@/lib/category-focus";
+import AdSlot from "@/components/AdSlot";
 import CategoryDesk from "./CategoryDesk";
+import DocumentChat from "./DocumentChat";
 
-type Mode = "simple" | "hindi" | "elder" | "eli5";
+const MODES: { id: ReadingMode; label: string }[] = [
+  { id: "simple", label: "English" },
+  { id: "hindi", label: "हिंदी" },
+  { id: "marathi", label: "मराठी" },
+  { id: "tamil", label: "தமிழ்" },
+  { id: "bengali", label: "বাংলা" },
+  { id: "gujarati", label: "ગુજરાતી" },
+  { id: "elder", label: "Elder" },
+  { id: "eli5", label: "ELI5" },
+];
+
+function summaryFor(mode: ReadingMode, analysis: DocumentAnalysis) {
+  switch (mode) {
+    case "hindi":
+      return analysis.summaryHindi;
+    case "marathi":
+      return analysis.summaryMarathi || analysis.summaryHindi;
+    case "tamil":
+      return analysis.summaryTamil || analysis.summarySimple;
+    case "bengali":
+      return analysis.summaryBengali || analysis.summarySimple;
+    case "gujarati":
+      return analysis.summaryGujarati || analysis.summarySimple;
+    case "elder":
+      return analysis.summaryElder;
+    case "eli5":
+      return analysis.eli5;
+    default:
+      return analysis.summarySimple;
+  }
+}
 
 export default function AnalysisView({
   analysis,
@@ -23,46 +55,14 @@ export default function AnalysisView({
   preview: string | null;
   onSaved: () => void;
 }) {
-  const [mode, setMode] = useState<Mode>("simple");
-  const [question, setQuestion] = useState("");
-  const [askResult, setAskResult] = useState<AskResponse | null>(null);
-  const [asking, setAsking] = useState(false);
-  const [askError, setAskError] = useState<string | null>(null);
+  const [mode, setMode] = useState<ReadingMode>("simple");
   const [checked, setChecked] = useState<Record<number, boolean>>({});
 
-  const summary =
-    mode === "hindi"
-      ? analysis.summaryHindi
-      : mode === "elder"
-        ? analysis.summaryElder
-        : mode === "eli5"
-          ? analysis.eli5
-          : analysis.summarySimple;
-
-  async function ask(q?: string) {
-    const text = (q ?? question).trim();
-    if (!text) return;
-    setAsking(true);
-    setAskError(null);
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysis, question: text }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Ask failed");
-      setAskResult(data.answer);
-      setQuestion(text);
-    } catch (e) {
-      setAskError(e instanceof Error ? e.message : "Ask failed");
-    } finally {
-      setAsking(false);
-    }
-  }
-
+  const summary = summaryFor(mode, analysis);
   const scam = analysis.scamScore ?? 0;
-  const everyday = analysis.isEverydayDocument !== false && analysis.category !== "not_a_document";
+  const everyday =
+    analysis.isEverydayDocument !== false &&
+    analysis.category !== "not_a_document";
 
   return (
     <div className="space-y-6 print:space-y-4">
@@ -149,14 +149,7 @@ export default function AnalysisView({
 
       <section className="ruled-paper border border-[var(--night)] p-6 sm:p-8">
         <div className="no-print flex flex-wrap gap-2">
-          {(
-            [
-              ["simple", "Simple"],
-              ["hindi", "हिंदी"],
-              ["elder", "Elder"],
-              ["eli5", "ELI5"],
-            ] as const
-          ).map(([id, label]) => (
+          {MODES.map(({ id, label }) => (
             <button
               key={id}
               type="button"
@@ -181,7 +174,7 @@ export default function AnalysisView({
         )}
       </section>
 
-      {everyday && (
+      {everyday && analysis.category !== "id_kyc" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
             <h3 className="font-display text-xl text-[var(--night)]">
@@ -191,7 +184,9 @@ export default function AnalysisView({
                   ? "Payment action plan"
                   : analysis.category === "loan_finance"
                     ? "Money action plan"
-                    : "Action plan"}
+                    : analysis.category === "legal_notice"
+                      ? "Legal next steps"
+                      : "Action plan"}
             </h3>
             <ol className="mt-4 space-y-3">
               {(analysis.actionChecklist || []).map((item, i) => (
@@ -222,7 +217,9 @@ export default function AnalysisView({
                 ? "Clinic & dates"
                 : analysis.category === "school_notice"
                   ? "Fees & dates"
-                  : "Money & dates"}
+                  : analysis.category === "legal_notice"
+                    ? "Claims & dates on the notice"
+                    : "Money & dates"}
             </h3>
             {(analysis.amounts || []).length === 0 &&
             (analysis.importantDates || []).length === 0 ? (
@@ -330,15 +327,41 @@ export default function AnalysisView({
         </div>
       )}
 
+      {everyday && analysis.category === "id_kyc" && (
+        <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
+          <h3 className="font-display text-xl text-[var(--night)]">ID privacy checklist</h3>
+          <ol className="mt-4 space-y-3">
+            {(analysis.actionChecklist || []).map((item, i) => (
+              <li key={i} className="flex gap-3">
+                <input
+                  type="checkbox"
+                  aria-label={`Mark action complete: ${item.step}`}
+                  checked={!!checked[i]}
+                  onChange={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
+                  className="mt-1 h-4 w-4 accent-[var(--accent)]"
+                />
+                <div className={checked[i] ? "opacity-50 line-through" : ""}>
+                  <p className="font-medium text-[var(--ink)]">{item.step}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       {everyday && analysis.legalGuidance && (
         <section className="border border-[var(--night)] bg-[var(--night)] text-white">
           <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
             <div className="border-b border-white/15 p-6 sm:p-8 lg:border-b-0 lg:border-r">
               <p className="text-xs font-semibold text-[var(--glow)]">
-                RIGHTS &amp; ESCALATION GUIDE
+                {analysis.category === "legal_notice"
+                  ? "LEGAL DOCUMENT HELP"
+                  : "RIGHTS & ESCALATION GUIDE"}
               </p>
               <h3 className="mt-4 font-display text-3xl">
-                Know what this document asks of you.
+                {analysis.category === "legal_notice"
+                  ? "Understand the notice — then get real legal help if needed."
+                  : "Know what this document asks of you."}
               </h3>
               <p className="mt-4 text-sm leading-6 text-white/65">
                 {analysis.legalGuidance.documentNature}
@@ -378,57 +401,9 @@ export default function AnalysisView({
         </section>
       )}
 
-      <section className="no-print border border-[var(--night)] bg-[var(--panel)] p-6">
-        <h3 className="font-display text-xl text-[var(--night)]">Ask Sahaj</h3>
-        <p className="mt-1 text-sm text-[var(--slate)]">
-          {everyday
-            ? "Grounded answers only from this analysis."
-            : "You can still ask what the upload appears to be — Sahaj will not invent bill details."}
-        </p>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <input
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && void ask()}
-            placeholder="When is the last date? Who issued this?"
-            className="h-12 flex-1 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          />
-          <button
-            type="button"
-            disabled={asking || !question.trim()}
-            onClick={() => void ask()}
-            className="h-12 rounded-xl bg-[var(--accent)] px-6 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {asking ? "Thinking…" : "Ask"}
-          </button>
-        </div>
-        {askError && <p className="mt-3 text-sm text-[var(--danger)]">{askError}</p>}
-        {askResult && (
-          <div className="mt-4 rounded-xl bg-[var(--mist)] p-4">
-            {askResult.mode === "grounded-fallback" && (
-              <p className="mb-3 text-[11px] font-semibold text-[var(--warn)]">
-                GEMINI BUSY · ANSWERED FROM EXTRACTED BRIEF
-              </p>
-            )}
-            <p className="leading-relaxed">{askResult.answer}</p>
-            <p className="mt-2 leading-relaxed text-[var(--ink-soft)]">{askResult.answerHindi}</p>
-            {askResult.followUps?.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {askResult.followUps.map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => void ask(f)}
-                    className="rounded-full border border-[var(--line)] bg-white px-3 py-1 text-xs hover:bg-[var(--paper)]"
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
+      <DocumentChat analysis={analysis} />
+
+      <AdSlot variant="banner" />
     </div>
   );
 }

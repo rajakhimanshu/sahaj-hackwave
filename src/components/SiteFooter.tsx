@@ -25,6 +25,9 @@ export default function SiteFooter() {
           <Link href="/about" className="focus-ring w-fit hover:text-[var(--accent)]">
             About
           </Link>
+          <Link href="/earn" className="focus-ring w-fit hover:text-[var(--accent)]">
+            Earn / ads model
+          </Link>
         </nav>
         <nav className="flex flex-col gap-2 text-sm text-[var(--ink-soft)]">
           <p className="text-xs font-semibold text-[var(--accent)]">TRUST</p>

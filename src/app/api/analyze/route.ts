@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeDocument } from "@/lib/gemini";
+import { humanizeApiError, isRetryableModelError } from "@/lib/errors";
 
 export const maxDuration = 90;
 
@@ -15,12 +16,24 @@ export async function POST(req: NextRequest) {
   try {
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY not configured on server" },
+        {
+          error:
+            "GEMINI_API_KEY not configured on server. Set it in the AWS/server environment.",
+        },
         { status: 500 }
       );
     }
 
-    const form = await req.formData();
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return NextResponse.json(
+        { error: "Could not read upload. Try again with a smaller file." },
+        { status: 400 }
+      );
+    }
+
     const file = form.get("file");
 
     if (!file || !(file instanceof File)) {
@@ -29,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     if (!ALLOWED.has(file.type)) {
       return NextResponse.json(
-        { error: "Upload JPG, PNG, WEBP, or PDF" },
+        { error: "Upload JPG, PNG, WEBP, GIF, or PDF only" },
         { status: 400 }
       );
     }
@@ -44,6 +57,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (file.size < 64) {
+      return NextResponse.json(
+        { error: "File looks empty or corrupted. Try another photo." },
+        { status: 400 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const base64 = buffer.toString("base64");
     const analysis = await analyzeDocument(base64, file.type);
@@ -52,19 +72,14 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Analysis failed";
     console.error("[analyze]", message);
-    const unavailable =
-      message.includes("503") ||
-      message.includes("429") ||
-      message.toLowerCase().includes("high demand") ||
-      message.toLowerCase().includes("aborted") ||
-      message.toLowerCase().includes("timed out");
     return NextResponse.json(
       {
-        error: unavailable
-          ? "Gemini is busy right now. Wait a moment and try again."
-          : "Sahaj could not read this document. Try a clearer image or PDF.",
+        error: humanizeApiError(
+          message,
+          "Sahaj could not read this document. Try a clearer image or PDF."
+        ),
       },
-      { status: unavailable ? 503 : 500 }
+      { status: isRetryableModelError(message) ? 503 : 500 }
     );
   }
 }

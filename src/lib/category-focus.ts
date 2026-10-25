@@ -11,6 +11,8 @@ const LABELS: Record<DocumentCategory, string> = {
   insurance: "Insurance desk",
   loan_finance: "Loan & finance desk",
   government: "Government form desk",
+  legal_notice: "Legal notice desk",
+  id_kyc: "ID & KYC privacy desk",
   medical: "Medical desk",
   tax: "Tax desk",
   property: "Property desk",
@@ -266,7 +268,73 @@ export function buildFallbackCategoryFocus(
               : ["Prior agreement", "ID proofs"],
           },
         ],
-        primaryAction: firstAction(analysis) || "Verify with a trusted family member before acting",
+        primaryAction:
+          firstAction(analysis) ||
+          "Verify with a trusted family member before acting",
+      };
+    case "legal_notice":
+      return {
+        headline: "Legal notice desk",
+        metrics: pickMetrics(analysis, [
+          ["Nature", analysis.documentType || analysis.title],
+          ["Issuer", analysis.parties[0] || "See notice"],
+          ["Deadline", firstDate(analysis) || "Check notice"],
+        ]),
+        panels: [
+          {
+            title: "Read carefully before reacting",
+            items: [
+              "This is document education — not legal advice",
+              "Note any reply / appearance deadline printed on the paper",
+              "Keep the original envelope, stamp, and all pages",
+            ],
+          },
+          {
+            title: "Safe next steps",
+            items: analysis.actionChecklist.length
+              ? analysis.actionChecklist.map((a) => a.step).slice(0, 4)
+              : [
+                  "Verify the sender through an official channel",
+                  "Consult a qualified lawyer for court / eviction language",
+                  "Do not pay unknown agents in cash under pressure",
+                ],
+          },
+        ],
+        primaryAction:
+          firstAction(analysis) ||
+          "Verify the issuer, then consult a qualified professional if needed",
+      };
+    case "id_kyc":
+      return {
+        headline: "ID & KYC privacy desk",
+        metrics: pickMetrics(analysis, [
+          ["ID type", analysis.documentType || "Identity document"],
+          ["Issuer", analysis.parties[0] || "Government / authority"],
+          ["Sensitivity", "High — personal data"],
+        ]),
+        panels: [
+          {
+            title: "Privacy first",
+            items: [
+              "Do not post full ID photos on WhatsApp groups or social media",
+              "Mask Aadhaar / sensitive numbers when sharing copies",
+              "Sahaj does not treat ID cards like bills — no fake payment asks",
+            ],
+          },
+          {
+            title: "Typical uses",
+            items: analysis.actionChecklist.length
+              ? analysis.actionChecklist.map((a) => a.step).slice(0, 4)
+              : [
+                  "Use only for official KYC / enrolment when required",
+                  "Update details only through official portals or centres",
+                  "Store physical IDs safely at home",
+                ],
+          },
+        ],
+        primaryAction:
+          firstAction(analysis) ||
+          "Use official channels only; protect this ID from unnecessary sharing",
       };
     default:
       return {
@@ -338,6 +406,14 @@ export function normalizeAnalysis(raw: DocumentAnalysis): DocumentAnalysis {
     category,
     documentKind,
     isEverydayDocument: isEveryday && category !== "not_a_document",
+    summarySimple: raw.summarySimple || "",
+    summaryHindi: raw.summaryHindi || "",
+    summaryMarathi: raw.summaryMarathi || raw.summaryHindi || "",
+    summaryTamil: raw.summaryTamil || raw.summarySimple || "",
+    summaryBengali: raw.summaryBengali || raw.summarySimple || "",
+    summaryGujarati: raw.summaryGujarati || raw.summarySimple || "",
+    summaryElder: raw.summaryElder || raw.summarySimple || "",
+    eli5: raw.eli5 || raw.summarySimple || "",
     amounts: Array.isArray(raw.amounts) ? raw.amounts : [],
     importantDates: Array.isArray(raw.importantDates) ? raw.importantDates : [],
     actionChecklist: Array.isArray(raw.actionChecklist) ? raw.actionChecklist : [],
