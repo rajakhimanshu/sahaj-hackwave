@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { normalizeAnalysis } from "./category-focus";
 import type { AskResponse, DocumentAnalysis } from "./types";
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
@@ -73,14 +74,38 @@ async function generateWithFallback(
 }
 
 const ANALYZE_PROMPT = `You are Sahaj — a production-grade document intelligence system for Indian families.
-You read everyday documents: utility bills, school notices, insurance, loans, tax, property, medical, government forms.
+You ONLY treat everyday household / civic paperwork as primary: utility bills, school notices, insurance, loans, tax, property, medical papers, government forms and official notices.
 
-Analyze the uploaded document carefully. Extract only what is visible. Never invent amounts or dates.
+Analyze carefully. Extract only what is visible. Never invent amounts or dates.
+
+If the upload is a selfie, meme, random photo, chat screenshot, food, landscape, product packaging, blank page, or anything that is NOT household/civic paperwork:
+- set isEverydayDocument=false
+- set documentKind="not_a_document"
+- set category="not_a_document"
+- set confidence <= 0.35
+- set scamScore=0 unless it is phishing bait
+- leave amounts/importantDates empty unless printed on a real notice
+- put a clear rejectionHint
+- still return honest summaries explaining what the image appears to be
+
+categoryFocus MUST change by category — do not reuse the same panel titles for every document:
+- utility_bill: payment desk (amount due, due date, consumer ID checks)
+- school_notice: parent desk (deadline, fee, what child needs)
+- insurance: policy/claim desk
+- loan_finance: EMI / recovery caution desk
+- government: civic form desk
+- medical: care paperwork desk
+- tax: compliance desk
+- property: property caution desk
+- not_a_document: rejection desk
 
 Return ONLY valid JSON with this exact shape:
 {
-  "documentType": "specific type e.g. Electricity bill / CBSE circular",
-  "category": "utility_bill|school_notice|insurance|loan_finance|government|medical|tax|property|other",
+  "documentType": "specific type e.g. Electricity bill / CBSE circular / Selfie photo",
+  "category": "utility_bill|school_notice|insurance|loan_finance|government|medical|tax|property|other|not_a_document",
+  "documentKind": "everyday_paperwork|not_a_document|unclear",
+  "isEverydayDocument": true,
+  "rejectionHint": "only when not everyday paperwork",
   "title": "short human title",
   "summarySimple": "2-4 sentences plain English",
   "summaryHindi": "same in simple Hindi Devanagari",
@@ -93,30 +118,31 @@ Return ONLY valid JSON with this exact shape:
   "documentsNeeded": ["papers they may need"],
   "riskFlags": [{"level":"info|warning|danger","message":""}],
   "scamScore": 0,
-  "consumerTips": ["India-relevant consumer/citizen tips for this doc type"],
+  "consumerTips": ["India-relevant tips for THIS category only"],
   "familyWhoShouldKnow": ["who in a typical family should see this"],
   "keyQuotes": ["short exact phrases copied from the document if readable"],
   "glossary": [{"term":"jargon from doc","meaning":"plain meaning"}],
   "confidence": 0.0,
   "whatHappensIfIgnored": "practical consequence if they do nothing",
+  "categoryFocus": {
+    "headline": "category-specific desk title",
+    "metrics": [{"label":"","value":"","hint":"optional"}],
+    "panels": [{"title":"category-specific panel","items":["..."]}],
+    "primaryAction": "one main next step for this category"
+  },
   "legalGuidance": {
     "isLegalOrOfficial": false,
-    "documentNature": "plain description of whether this is a contract, demand, notice, policy, form, court/government communication, or ordinary document",
-    "obligations": ["actions the document explicitly requires; empty if none"],
-    "rightsOrOptions": ["options explicitly stated in the document; do not invent legal rights"],
-    "escalationSteps": ["safe practical escalation, e.g. verify issuer, contact official grievance channel, consult a qualified professional"],
-    "officialHelp": ["official authority or professional category to contact; never fabricate phone numbers or URLs"],
+    "documentNature": "plain description of document nature",
+    "obligations": ["actions explicitly required; empty if none"],
+    "rightsOrOptions": ["options explicitly stated; do not invent rights"],
+    "escalationSteps": ["safe practical escalation"],
+    "officialHelp": ["authority or professional category; never fabricate phone numbers/URLs unless printed"],
     "urgencyReason": "why this is or is not time-sensitive"
   }
 }
 
 scamScore: 0-100. Higher if pressure tactics, unusual payment asks, spoofed logos, typos, urgency without official channel.
-For legalGuidance:
-- This is document education, not legal advice.
-- Distinguish text visible in the document from general practical guidance.
-- Never claim a legal right, deadline, penalty, or remedy unless visible in the document.
-- Recommend a qualified lawyer or official authority for court notices, eviction, arrest, large financial exposure, or unclear legal consequences.
-If image is not a document, still return JSON with low confidence and explain in summaries.`;
+For legalGuidance: document education, not legal advice. Never invent legal rights or remedies.`;
 
 export async function analyzeDocument(
   base64: string,
@@ -127,7 +153,7 @@ export async function analyzeDocument(
     { inlineData: { data: base64, mimeType } },
   ], 0.15, { primary: 55_000, fallback: 25_000 });
 
-  return extractJson<DocumentAnalysis>(text);
+  return normalizeAnalysis(extractJson<DocumentAnalysis>(text));
 }
 
 export async function askAboutDocument(

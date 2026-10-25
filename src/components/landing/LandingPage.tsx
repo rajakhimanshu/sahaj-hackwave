@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 const documentTypes = [
@@ -19,23 +20,23 @@ export default function LandingPage() {
           <div className="relative mx-auto grid min-h-[44rem] max-w-7xl lg:grid-cols-[1.04fr_0.96fr]">
             <div className="flex flex-col justify-between border-[var(--night)] px-5 py-12 sm:px-10 sm:py-16 lg:border-r lg:px-14 lg:py-20">
               <div>
-                <div className="flex items-center gap-3 text-xs font-semibold text-[var(--accent)]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
+                <div className="reveal-up flex items-center gap-3 text-xs font-semibold text-[var(--accent)]">
+                  <span className="pulse-dot h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
                   FAMILY DOCUMENT INTELLIGENCE
                 </div>
-                <h1 className="mt-10 max-w-[11ch] font-display text-[3.6rem] leading-[0.96] tracking-[-0.045em] text-[var(--night)] sm:text-[5.4rem] lg:text-[6.4rem]">
+                <h1 className="reveal-up mt-10 max-w-[11ch] font-display text-[3.6rem] leading-[0.96] tracking-[-0.045em] text-[var(--night)] sm:text-[5.4rem] lg:text-[6.4rem]">
                   Paperwork,
                   <br />
                   made <span className="text-[var(--accent)]">sahaj.</span>
                 </h1>
-                <p className="mt-8 max-w-xl text-base leading-7 text-[var(--ink-soft)] sm:text-lg">
+                <p className="reveal-up mt-8 max-w-xl text-base leading-7 text-[var(--ink-soft)] sm:text-lg">
                   Photograph any bill, notice, policy, or form. Sahaj reads the
                   fine print and gives your family a plain-language brief,
                   Hindi explanation, risk check, and exact next steps.
                 </p>
               </div>
 
-              <div className="mt-12 flex flex-wrap items-center gap-4">
+              <div className="reveal-up mt-12 flex flex-wrap items-center gap-4">
                 <Link
                   href="/app"
                   className="focus-ring inline-flex min-h-12 items-center bg-[var(--night)] px-6 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
@@ -50,7 +51,7 @@ export default function LandingPage() {
                   Try the live demo
                 </Link>
                 <p className="w-full text-xs text-[var(--slate)]">
-                  No sign-up · Works in English & Hindi · Powered by Gemini
+                  No sign-up · Device vault · DPDP-minded · Gemini multimodal
                 </p>
               </div>
             </div>
@@ -61,8 +62,23 @@ export default function LandingPage() {
 
         <section className="border-b border-[var(--night)] bg-[var(--glow)]">
           <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 px-5 py-4 text-sm font-semibold text-[var(--night)] sm:flex-row sm:px-10 lg:px-14">
-            <span>One photograph → one family-ready brief</span>
+            <span>One photograph → one category-specific family brief</span>
             <span>Gemini Vision · Grounded Q&A · Private device vault</span>
+          </div>
+        </section>
+
+        <section className="border-b border-[var(--night)] bg-[var(--night)] text-white">
+          <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:grid-cols-3 sm:px-10 lg:px-14">
+            {[
+              ["No login dashboard yet", "Vault stays on-device — fewer personal data stores under DPDP."],
+              ["Category desks", "Bills, school, loans, and forms each get their own guidance shape."],
+              ["Random photos flagged", "Selfies and memes are not treated like electricity bills."],
+            ].map(([title, copy]) => (
+              <article key={title} className="border-l-2 border-[var(--glow)] pl-4">
+                <h3 className="text-sm font-semibold text-[var(--glow)]">{title}</h3>
+                <p className="mt-2 text-xs leading-5 text-white/65">{copy}</p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -258,26 +274,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-[var(--night)] bg-[var(--paper)]">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:grid-cols-3 sm:px-10 lg:px-14">
-          <div>
-            <p className="font-display text-3xl text-[var(--night)]">Sahaj</p>
-            <p className="mt-2 text-xs text-[var(--slate)]">
-              Paperwork, made understandable.
-            </p>
-          </div>
-          <nav className="flex flex-col gap-2 text-sm text-[var(--ink-soft)]">
-            <Link href="/app">Workspace</Link>
-            <Link href="/app/vault">Family vault</Link>
-            <Link href="/app?demo=1">Live demo</Link>
-          </nav>
-          <p className="text-sm leading-6 text-[var(--slate)]">
-            Hack Wave · Civic + Family + Education
-            <br />
-            Powered by Google Gemini multimodal
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
@@ -286,9 +283,17 @@ function DocumentDesk() {
   return (
     <div className="relative flex min-h-[38rem] items-center justify-center overflow-hidden bg-[var(--mist)] px-5 py-16 sm:px-12 lg:min-h-full">
       <div className="paper-grain pointer-events-none absolute inset-0 opacity-[0.2]" />
-      <div className="absolute left-8 top-8 font-display text-8xl text-[var(--night)]/[0.05]">
+      <div className="float-slow absolute left-8 top-8 font-display text-8xl text-[var(--night)]/[0.05]">
         परिवार
       </div>
+      <div
+        aria-hidden
+        className="ink-orbit pointer-events-none absolute -right-10 top-16 h-40 w-40 rounded-full border border-[var(--night)]/15"
+      />
+      <div
+        aria-hidden
+        className="ink-orbit-delay pointer-events-none absolute bottom-16 left-6 h-24 w-24 rounded-full border border-[var(--accent)]/25"
+      />
       <div className="hero-folder folder-shadow relative w-full max-w-md border border-[var(--night)] bg-[#d8a94b] p-3 pt-12">
         <div className="absolute -top-8 left-0 h-9 w-44 border border-b-0 border-[var(--night)] bg-[#d8a94b]" />
         <div className="hero-sheet ruled-paper relative min-h-[28rem] overflow-hidden border border-[var(--night)] px-8 py-10 sm:px-12">
@@ -299,7 +304,7 @@ function DocumentDesk() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold text-[var(--accent)]">
-                SAHAJ / DOCUMENT 014
+                SAHAJ / SCHOOL DESK
               </p>
               <h2 className="mt-4 font-display text-3xl leading-tight text-[var(--night)]">
                 School fee
@@ -321,7 +326,7 @@ function DocumentDesk() {
               <dd className="font-bold text-[var(--accent)]">Monday, 9:00 AM</dd>
             </div>
             <div className="flex justify-between border-b border-[var(--line)] pb-3">
-              <dt className="text-[var(--slate)]">Action</dt>
+              <dt className="text-[var(--slate)]">Parent action</dt>
               <dd className="font-bold text-[var(--night)]">3 steps</dd>
             </div>
           </dl>
@@ -331,8 +336,11 @@ function DocumentDesk() {
           </p>
         </div>
       </div>
-      <div className="hero-tag absolute bottom-7 right-7 rotate-3 border border-[var(--night)] bg-[var(--accent)] px-4 py-3 text-xs font-bold text-white">
+      <div className="hero-tag float-tag absolute bottom-7 right-7 rotate-3 border border-[var(--night)] bg-[var(--accent)] px-4 py-3 text-xs font-bold text-white">
         EN + हिंदी
+      </div>
+      <div className="hero-tag absolute left-6 top-24 -rotate-6 border border-[var(--night)] bg-[var(--panel)] px-3 py-2 text-[10px] font-bold text-[var(--night)]">
+        DPDP-MINDED
       </div>
     </div>
   );

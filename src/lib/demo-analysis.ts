@@ -3,6 +3,8 @@ import type { DocumentAnalysis } from "./types";
 export const DEMO_ANALYSIS: DocumentAnalysis = {
   documentType: "Electricity bill",
   category: "utility_bill",
+  documentKind: "everyday_paperwork",
+  isEverydayDocument: true,
   title: "BESCOM electricity bill — March",
   summarySimple:
     "This is the March electricity bill for your home. The total amount due is ₹2,840 and it should be paid by 28 March to avoid a late fee or possible service interruption.",
@@ -67,6 +69,33 @@ export const DEMO_ANALYSIS: DocumentAnalysis = {
   confidence: 0.94,
   whatHappensIfIgnored:
     "A late fee may be added. If the bill remains unpaid, the electricity connection can eventually be disconnected.",
+  categoryFocus: {
+    headline: "Bill payment desk",
+    metrics: [
+      { label: "Amount due", value: "₹2,840", hint: "Before late fee" },
+      { label: "Due date", value: "28 March", hint: "High urgency" },
+      { label: "Issuer", value: "BESCOM" },
+    ],
+    panels: [
+      {
+        title: "Before you pay",
+        items: [
+          "Match the consumer / RR number with last month’s bill",
+          "Pay only on the official BESCOM app or website",
+          "Save the payment receipt to the family vault",
+        ],
+      },
+      {
+        title: "If the amount looks wrong",
+        items: [
+          "Compare units with previous bills",
+          "Raise a complaint on BESCOM’s official channel",
+          "Keep screenshots of the bill and complaint ID",
+        ],
+      },
+    ],
+    primaryAction: "Pay ₹2,840 through the official BESCOM channel by 28 March",
+  },
   legalGuidance: {
     isLegalOrOfficial: true,
     documentNature:

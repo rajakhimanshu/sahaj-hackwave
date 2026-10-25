@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { AskResponse, DocumentAnalysis } from "@/lib/types";
 import { downloadReport, printReport } from "@/lib/export-report";
+import { categoryLabel } from "@/lib/category-focus";
+import CategoryDesk from "./CategoryDesk";
 
 type Mode = "simple" | "hindi" | "elder" | "eli5";
 
@@ -56,10 +58,11 @@ export default function AnalysisView({
   }
 
   const scam = analysis.scamScore ?? 0;
+  const everyday = analysis.isEverydayDocument !== false && analysis.category !== "not_a_document";
 
   return (
     <div className="space-y-6 print:space-y-4">
-      <div className="folder-shadow flex flex-col gap-4 border border-[var(--night)] bg-[var(--panel)] p-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="folder-shadow reveal-up flex flex-col gap-4 border border-[var(--night)] bg-[var(--panel)] p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-4">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -70,7 +73,9 @@ export default function AnalysisView({
             </div>
           )}
           <div>
-            <p className="text-xs font-medium text-[var(--accent)]">{analysis.category?.replaceAll("_", " ")}</p>
+            <p className="text-xs font-medium text-[var(--accent)]">
+              {categoryLabel(analysis.category)}
+            </p>
             <h2 className="font-display text-2xl text-[var(--night)]">{analysis.title || analysis.documentType}</h2>
             <p className="mt-1 text-sm text-[var(--slate)]">
               {analysis.documentType} · {Math.round((analysis.confidence ?? 0) * 100)}% confidence · {fileName}
@@ -78,47 +83,58 @@ export default function AnalysisView({
           </div>
         </div>
         <div className="no-print flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={onSaved}
-            className="rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-[var(--mist)]"
-          >
-            Save to vault
-          </button>
+          {everyday && (
+            <button
+              type="button"
+              onClick={onSaved}
+              className="focus-ring rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-[var(--mist)]"
+            >
+              Save to vault
+            </button>
+          )}
           <button
             type="button"
             onClick={() => downloadReport(analysis, fileName)}
-            className="rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-[var(--mist)]"
+            className="focus-ring rounded-xl border border-[var(--line)] px-3 py-2 text-sm font-medium hover:bg-[var(--mist)]"
           >
             Download brief
           </button>
           <button
             type="button"
             onClick={printReport}
-            className="rounded-xl bg-[var(--night)] px-3 py-2 text-sm font-medium text-white"
+            className="focus-ring rounded-xl bg-[var(--night)] px-3 py-2 text-sm font-medium text-white"
           >
             Print
           </button>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Metric
-          label="Scam risk"
-          value={`${scam}/100`}
-          tone={scam >= 60 ? "danger" : scam >= 30 ? "warn" : "ok"}
-        />
-        <Metric
-          label="High-priority actions"
-          value={String(analysis.actionChecklist?.filter((a) => a.priority === "high").length || 0)}
-          tone="neutral"
-        />
-        <Metric
-          label="Urgent dates"
-          value={String(analysis.importantDates?.filter((d) => d.urgency === "high").length || 0)}
-          tone="neutral"
-        />
-      </div>
+      <CategoryDesk analysis={analysis} />
+
+      {everyday ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Metric
+            label="Scam risk"
+            value={`${scam}/100`}
+            tone={scam >= 60 ? "danger" : scam >= 30 ? "warn" : "ok"}
+          />
+          <Metric
+            label="High-priority actions"
+            value={String(analysis.actionChecklist?.filter((a) => a.priority === "high").length || 0)}
+            tone="neutral"
+          />
+          <Metric
+            label="Urgent dates"
+            value={String(analysis.importantDates?.filter((d) => d.urgency === "high").length || 0)}
+            tone="neutral"
+          />
+        </div>
+      ) : (
+        <div className="border border-[var(--danger)] bg-red-50 px-5 py-4 text-sm text-red-900">
+          Sahaj did not treat this upload as household or civic paperwork. Re-upload a clear
+          photo or PDF of a bill, notice, form, policy, or official letter.
+        </div>
+      )}
 
       <section className="ruled-paper border border-[var(--night)] p-6 sm:p-8">
         <div className="no-print flex flex-wrap gap-2">
@@ -154,56 +170,88 @@ export default function AnalysisView({
         )}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
-          <h3 className="font-display text-xl text-[var(--night)]">Action plan</h3>
-          <ol className="mt-4 space-y-3">
-            {(analysis.actionChecklist || []).map((item, i) => (
-              <li key={i} className="flex gap-3">
-                <input
-                  type="checkbox"
-                  aria-label={`Mark action complete: ${item.step}`}
-                  checked={!!checked[i]}
-                  onChange={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
-                  className="mt-1 h-4 w-4 accent-[var(--accent)]"
-                />
-                <div className={checked[i] ? "opacity-50 line-through" : ""}>
-                  <p className="font-medium text-[var(--ink)]">{item.step}</p>
-                  <p className="text-xs text-[var(--slate)]">
-                    {item.priority} priority
-                    {item.deadline ? ` · by ${item.deadline}` : ""}
-                    {item.doneHint ? ` · ${item.doneHint}` : ""}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
+      {everyday && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
+            <h3 className="font-display text-xl text-[var(--night)]">
+              {analysis.category === "school_notice"
+                ? "Parent action plan"
+                : analysis.category === "utility_bill"
+                  ? "Payment action plan"
+                  : analysis.category === "loan_finance"
+                    ? "Money action plan"
+                    : "Action plan"}
+            </h3>
+            <ol className="mt-4 space-y-3">
+              {(analysis.actionChecklist || []).map((item, i) => (
+                <li key={i} className="flex gap-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Mark action complete: ${item.step}`}
+                    checked={!!checked[i]}
+                    onChange={() => setChecked((c) => ({ ...c, [i]: !c[i] }))}
+                    className="mt-1 h-4 w-4 accent-[var(--accent)]"
+                  />
+                  <div className={checked[i] ? "opacity-50 line-through" : ""}>
+                    <p className="font-medium text-[var(--ink)]">{item.step}</p>
+                    <p className="text-xs text-[var(--slate)]">
+                      {item.priority} priority
+                      {item.deadline ? ` · by ${item.deadline}` : ""}
+                      {item.doneHint ? ` · ${item.doneHint}` : ""}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
 
-        <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
-          <h3 className="font-display text-xl text-[var(--night)]">Money & dates</h3>
-          <ul className="mt-4 space-y-2">
-            {(analysis.amounts || []).map((a) => (
-              <li key={a.label} className="flex justify-between gap-3 border-b border-[var(--mist)] py-2 text-sm">
-                <span className="text-[var(--slate)]">{a.label}</span>
-                <span className="font-semibold">{a.value}</span>
-              </li>
-            ))}
-          </ul>
-          <ul className="mt-4 space-y-2">
-            {(analysis.importantDates || []).map((d) => (
-              <li key={d.label + d.date} className="flex justify-between gap-3 text-sm">
-                <span className="text-[var(--slate)]">{d.label}</span>
-                <span className={d.urgency === "high" ? "font-semibold text-[var(--danger)]" : ""}>
-                  {d.date}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+          <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
+            <h3 className="font-display text-xl text-[var(--night)]">
+              {analysis.category === "medical"
+                ? "Clinic & dates"
+                : analysis.category === "school_notice"
+                  ? "Fees & dates"
+                  : "Money & dates"}
+            </h3>
+            {(analysis.amounts || []).length === 0 &&
+            (analysis.importantDates || []).length === 0 ? (
+              <p className="mt-4 text-sm text-[var(--slate)]">
+                No amounts or dates were clearly visible on this document.
+              </p>
+            ) : (
+              <>
+                <ul className="mt-4 space-y-2">
+                  {(analysis.amounts || []).map((a) => (
+                    <li
+                      key={a.label}
+                      className="flex justify-between gap-3 border-b border-[var(--mist)] py-2 text-sm"
+                    >
+                      <span className="text-[var(--slate)]">{a.label}</span>
+                      <span className="font-semibold">{a.value}</span>
+                    </li>
+                  ))}
+                </ul>
+                <ul className="mt-4 space-y-2">
+                  {(analysis.importantDates || []).map((d) => (
+                    <li key={d.label + d.date} className="flex justify-between gap-3 text-sm">
+                      <span className="text-[var(--slate)]">{d.label}</span>
+                      <span
+                        className={
+                          d.urgency === "high" ? "font-semibold text-[var(--danger)]" : ""
+                        }
+                      >
+                        {d.date}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        </div>
+      )}
 
-      {(analysis.riskFlags?.length > 0 || analysis.consumerTips?.length > 0) && (
+      {everyday && (analysis.riskFlags?.length > 0 || analysis.consumerTips?.length > 0) && (
         <div className="grid gap-6 lg:grid-cols-2">
           <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
             <h3 className="font-display text-xl text-[var(--night)]">Risks</h3>
@@ -241,7 +289,7 @@ export default function AnalysisView({
         </div>
       )}
 
-      {(analysis.glossary?.length > 0 || analysis.keyQuotes?.length > 0) && (
+      {everyday && (analysis.glossary?.length > 0 || analysis.keyQuotes?.length > 0) && (
         <div className="grid gap-6 lg:grid-cols-2">
           {analysis.glossary?.length > 0 && (
             <section className="border border-[var(--night)] bg-[var(--panel)] p-6">
@@ -271,7 +319,7 @@ export default function AnalysisView({
         </div>
       )}
 
-      {analysis.legalGuidance && (
+      {everyday && analysis.legalGuidance && (
         <section className="border border-[var(--night)] bg-[var(--night)] text-white">
           <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
             <div className="border-b border-white/15 p-6 sm:p-8 lg:border-b-0 lg:border-r">
@@ -321,7 +369,11 @@ export default function AnalysisView({
 
       <section className="no-print border border-[var(--night)] bg-[var(--panel)] p-6">
         <h3 className="font-display text-xl text-[var(--night)]">Ask Sahaj</h3>
-        <p className="mt-1 text-sm text-[var(--slate)]">Grounded answers only from this analysis.</p>
+        <p className="mt-1 text-sm text-[var(--slate)]">
+          {everyday
+            ? "Grounded answers only from this analysis."
+            : "You can still ask what the upload appears to be — Sahaj will not invent bill details."}
+        </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <input
             value={question}

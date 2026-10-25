@@ -30,18 +30,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             Demo document
           </Link>
+          <Link
+            href="/security"
+            className="focus-ring block border-l-2 border-transparent px-4 py-3 text-white/65 hover:border-white/30 hover:bg-white/5 hover:text-white"
+          >
+            Security &amp; DPDP
+          </Link>
         </nav>
 
         <div className="mt-auto border-t border-white/15 pt-6">
           <p className="text-[11px] font-semibold text-[var(--glow)]">
-            GEMINI MULTIMODAL
+            DEVICE-LOCAL VAULT
           </p>
           <p className="mt-2 text-xs leading-5 text-white/50">
-            Documents are processed securely. Vault data stays in this browser.
+            No login dashboard yet — briefs stay in this browser. Gemini reads
+            uploads only to build the brief.
           </p>
           <Link
+            href="/privacy"
+            className="focus-ring mt-4 inline-block text-xs text-white/65 hover:text-white"
+          >
+            Privacy notice →
+          </Link>
+          <Link
             href="/"
-            className="focus-ring mt-6 inline-block text-xs text-white/65 hover:text-white"
+            className="focus-ring mt-3 block text-xs text-white/65 hover:text-white"
           >
             ← Back to website
           </Link>

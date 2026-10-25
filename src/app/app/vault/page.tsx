@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { categoryLabel } from "@/lib/category-focus";
 import type { VaultItem } from "@/lib/types";
 import { deleteVaultItem, listVault } from "@/lib/vault";
 import { downloadReport } from "@/lib/export-report";
@@ -72,7 +73,9 @@ export default function VaultPage() {
                         {item.analysis.title || item.fileName}
                       </p>
                       <p className="mt-0.5 text-xs text-[var(--slate)]">
-                        {new Date(item.createdAt).toLocaleString()} · scam {item.analysis.scamScore ?? 0}
+                        {categoryLabel(item.analysis.category)} ·{" "}
+                        {new Date(item.createdAt).toLocaleString()} · scam{" "}
+                        {item.analysis.scamScore ?? 0}
                       </p>
                     </div>
                   </div>

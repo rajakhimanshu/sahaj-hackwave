@@ -11,11 +11,39 @@ export type DocumentCategory =
   | "medical"
   | "tax"
   | "property"
-  | "other";
+  | "other"
+  | "not_a_document";
+
+export type DocumentKind =
+  | "everyday_paperwork"
+  | "not_a_document"
+  | "unclear";
+
+export type CategoryMetric = {
+  label: string;
+  value: string;
+  hint?: string;
+};
+
+export type CategoryPanel = {
+  title: string;
+  items: string[];
+};
+
+/** Category-shaped payload so UI does not reuse the same panels for every doc. */
+export type CategoryFocus = {
+  headline: string;
+  metrics: CategoryMetric[];
+  panels: CategoryPanel[];
+  primaryAction?: string;
+};
 
 export type DocumentAnalysis = {
   documentType: string;
   category: DocumentCategory;
+  documentKind: DocumentKind;
+  isEverydayDocument: boolean;
+  rejectionHint?: string;
   title: string;
   summarySimple: string;
   summaryHindi: string;
@@ -39,6 +67,7 @@ export type DocumentAnalysis = {
   glossary: { term: string; meaning: string }[];
   confidence: number;
   whatHappensIfIgnored: string;
+  categoryFocus: CategoryFocus;
   legalGuidance?: {
     isLegalOrOfficial: boolean;
     documentNature: string;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { normalizeAnalysis } from "@/lib/category-focus";
 import type { DocumentAnalysis } from "@/lib/types";
 import { saveToVault, vaultStats } from "@/lib/vault";
 import { DEMO_ANALYSIS } from "@/lib/demo-analysis";
@@ -87,9 +88,12 @@ export default function Workspace() {
       const res = await fetch("/api/analyze", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Analysis failed");
-      setAnalysis(data.analysis as DocumentAnalysis);
+      const next = normalizeAnalysis(data.analysis as DocumentAnalysis);
+      setAnalysis(next);
       setPhase("ready");
-      showToast("Brief ready");
+      showToast(
+        next.isEverydayDocument ? "Brief ready" : "Not everyday paperwork"
+      );
     } catch (e) {
       setPhase("error");
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -122,7 +126,8 @@ export default function Workspace() {
           <p className="text-xs font-semibold text-[var(--accent)]">NEW BRIEF</p>
           <h1 className="mt-2 font-display text-4xl text-[var(--night)] sm:text-5xl">Understand a document</h1>
           <p className="mt-2 max-w-xl text-[var(--slate)]">
-            Drop a document. Sahaj builds a bilingual brief, scam check, and action plan.
+            Drop household paperwork. Sahaj builds a category desk, bilingual brief,
+            scam check, and action plan — random photos are flagged, not treated as bills.
           </p>
         </div>
         <div className="flex gap-3 text-sm">
