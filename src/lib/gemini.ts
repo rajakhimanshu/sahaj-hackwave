@@ -25,32 +25,37 @@ function extractJson<T>(text: string): T {
   return JSON.parse(cleaned.slice(start, end + 1)) as T;
 }
 
-const ANALYZE_PROMPT = `You are Sahaj — an assistant that helps Indian families understand everyday documents
-(bills, school notices, insurance letters, loan papers, subsidy forms, government notices).
+const ANALYZE_PROMPT = `You are Sahaj — a production-grade document intelligence system for Indian families.
+You read everyday documents: utility bills, school notices, insurance, loans, tax, property, medical, government forms.
 
-Analyze the uploaded document image/PDF page carefully.
+Analyze the uploaded document carefully. Extract only what is visible. Never invent amounts or dates.
 
 Return ONLY valid JSON with this exact shape:
 {
-  "documentType": "string",
-  "title": "string",
-  "summarySimple": "2-4 sentences in plain English a 12-year-old can understand",
-  "summaryHindi": "same meaning in simple Hindi (Devanagari)",
-  "parties": ["who is involved"],
-  "amounts": [{"label":"string","value":"string with currency if any"}],
-  "importantDates": [{"label":"string","date":"string","urgency":"low|medium|high"}],
-  "actionChecklist": [{"step":"clear action","deadline":"optional","priority":"low|medium|high"}],
-  "documentsNeeded": ["any papers user may need"],
-  "riskFlags": [{"level":"info|warning|danger","message":"scam/risk/missed deadline notes"}],
-  "confidence": 0.0
+  "documentType": "specific type e.g. Electricity bill / CBSE circular",
+  "category": "utility_bill|school_notice|insurance|loan_finance|government|medical|tax|property|other",
+  "title": "short human title",
+  "summarySimple": "2-4 sentences plain English",
+  "summaryHindi": "same in simple Hindi Devanagari",
+  "summaryElder": "very slow, respectful explanation for a grandparent, English",
+  "eli5": "one short paragraph as if explaining to a curious 10-year-old",
+  "parties": ["issuer", "recipient if visible"],
+  "amounts": [{"label":"","value":"₹…","note":"optional context"}],
+  "importantDates": [{"label":"","date":"as written","urgency":"low|medium|high"}],
+  "actionChecklist": [{"step":"clear next action","deadline":"optional","priority":"low|medium|high","doneHint":"how they know it's done"}],
+  "documentsNeeded": ["papers they may need"],
+  "riskFlags": [{"level":"info|warning|danger","message":""}],
+  "scamScore": 0,
+  "consumerTips": ["India-relevant consumer/citizen tips for this doc type"],
+  "familyWhoShouldKnow": ["who in a typical family should see this"],
+  "keyQuotes": ["short exact phrases copied from the document if readable"],
+  "glossary": [{"term":"jargon from doc","meaning":"plain meaning"}],
+  "confidence": 0.0,
+  "whatHappensIfIgnored": "practical consequence if they do nothing"
 }
 
-Rules:
-- If text is unclear, lower confidence and say so in summary.
-- Prefer action checklist over long prose.
-- Flag urgency for payment/reply deadlines.
-- Never invent amounts or dates not visible in the document.
-- If not a document, still return JSON explaining that.`;
+scamScore: 0-100. Higher if pressure tactics, unusual payment asks, spoofed logos, typos, urgency without official channel.
+If image is not a document, still return JSON with low confidence and explain in summaries.`;
 
 export async function analyzeDocument(
   base64: string,
@@ -60,23 +65,17 @@ export async function analyzeDocument(
   const model = genAI.getGenerativeModel({
     model: MODEL,
     generationConfig: {
-      temperature: 0.2,
+      temperature: 0.15,
       responseMimeType: "application/json",
     },
   });
 
   const result = await model.generateContent([
     { text: ANALYZE_PROMPT },
-    {
-      inlineData: {
-        data: base64,
-        mimeType,
-      },
-    },
+    { inlineData: { data: base64, mimeType } },
   ]);
 
-  const text = result.response.text();
-  return extractJson<DocumentAnalysis>(text);
+  return extractJson<DocumentAnalysis>(result.response.text());
 }
 
 export async function askAboutDocument(
@@ -87,24 +86,26 @@ export async function askAboutDocument(
   const model = genAI.getGenerativeModel({
     model: MODEL,
     generationConfig: {
-      temperature: 0.3,
+      temperature: 0.25,
       responseMimeType: "application/json",
     },
   });
 
-  const prompt = `You are Sahaj. Answer ONLY using the document analysis JSON below.
-If the answer is not in the analysis, say you cannot confirm from this document.
+  const prompt = `You are Sahaj, a careful document copilot for Indian families.
+Answer ONLY from the analysis JSON. If unknown, say you cannot confirm from this document.
+Suggest 2 short follow-up questions the user might ask next.
 
-Document analysis:
+Analysis:
 ${JSON.stringify(analysis, null, 2)}
 
-User question: ${question}
+Question: ${question}
 
 Return ONLY JSON:
 {
-  "answer": "plain English",
+  "answer": "plain English, concrete",
   "answerHindi": "simple Hindi",
-  "citations": ["which fields from the analysis you used"]
+  "citations": ["fields used"],
+  "followUps": ["q1","q2"]
 }`;
 
   const result = await model.generateContent(prompt);
