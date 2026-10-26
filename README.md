@@ -123,27 +123,23 @@ Sahaj provides **document education**, not legal advice. High-risk matters are p
 
 ## Technical depth
 
-### Architecture
+### Architecture (current: Vercel-only)
 
 ```
-Browser (Vercel frontend)
+Browser
    │  same-origin /api/*
    ▼
-Next.js rewrite (AWS_API_ORIGIN)
-   │
-   ▼
-AWS EC2 Docker · Sahaj container
+Vercel · Next.js (UI + API routes)
    │
    ▼
 Google Gemini (multimodal) + model fallbacks
 ```
 
-- **Frontend:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4  
+- **Frontend + API:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4 on **Vercel**  
 - **Intelligence:** `@google/generative-ai` multimodal prompts → strict JSON brief  
-- **Split deploy:** Vercel UI + AWS API (Gemini key stays on server)  
-- **Proxy:** `AWS_API_ORIGIN` rewrites `/api/*` server-side — **no browser CORS**  
-- **Container:** multi-stage Docker `standalone` Next.js image  
-- **Isolation:** Sahaj runs beside Kapsee on the same host without touching Kapsee services  
+- **Secrets:** `GEMINI_API_KEY` lives in Vercel project env (never in the client)  
+- **Optional AWS split (legacy / scale):** set `AWS_API_ORIGIN` so Vercel rewrites `/api/*` to an EC2 Docker container — not required for normal use  
+- **Container:** multi-stage Docker `standalone` image still available if you want self-host later
 
 ### Reliability & safety engineering
 - Model primary + fallbacks (Gemini 3.x family) for overloaded / retired IDs  
@@ -204,31 +200,36 @@ npm run build
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `GEMINI_API_KEY` | Local + AWS | Required for analyze / ask |
+| `GEMINI_API_KEY` | Local + **Vercel** | Required for analyze / ask |
 | `GEMINI_MODEL` | Optional | Override default model |
-| `AWS_API_ORIGIN` | Vercel only | Proxy `/api/*` to AWS (build-time for rewrites) |
+| `AWS_API_ORIGIN` | Optional | Only if splitting API onto AWS |
 
 ---
 
 ## Deploy
 
-### AWS (API / full Docker)
+### Vercel only (recommended)
+
+1. Link the repo / project (`vercel link`)  
+2. Set `GEMINI_API_KEY` in Vercel → Project → Settings → Environment Variables (Production)  
+3. Deploy:
 
 ```bash
-# on the instance, with GEMINI_API_KEY in .env
-docker compose up -d --build
-# or named container workflow used in Hack Wave (isolated from Kapsee)
+vercel --prod --yes
 ```
 
-### Vercel (frontend) + AWS API
+Do **not** set `AWS_API_ORIGIN` — `/api/analyze` and `/api/ask` run on Vercel.
 
-1. Run Sahaj container on EC2 with `GEMINI_API_KEY`  
-2. Expose a stable HTTPS origin (tunnel / domain)  
-3. Deploy this repo on Vercel  
-4. Set **build + runtime** `AWS_API_ORIGIN=https://your-aws-api`  
-5. Browser keeps same-origin `/api/*`; Vercel proxies to AWS  
+Live: https://sahaj-hackwave.vercel.app
 
-Without `AWS_API_ORIGIN`, a single-host deploy uses Next.js route handlers directly.
+### Optional: AWS Docker (self-host / scale later)
+
+```bash
+# on a VM, with GEMINI_API_KEY in .env
+docker compose up -d --build
+```
+
+To put only the API on AWS again: set Vercel `AWS_API_ORIGIN` to that HTTPS origin (build + runtime).
 
 ---
 

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "GEMINI_API_KEY not configured on server. Set it in the AWS/server environment.",
+            "GEMINI_API_KEY not configured on server. Set it in the Vercel project environment.",
         },
         { status: 500 }
       );
